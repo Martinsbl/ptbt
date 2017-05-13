@@ -27,12 +27,11 @@ public class SpeedTestActivity extends AppCompatActivity {
 
     Intent intentGattClientService;
     private GattClientService mGattClientService;
-    boolean gattClientServiceStatus;
+    boolean mGattClientServiceIsBound = false;
 
     public static Intent createLaunchIntent(Context context, String deviceAddress) {
         Intent intentSpeedTestActivity = new Intent(context, SpeedTestActivity.class);
         intentSpeedTestActivity.putExtra(EXTRA_DEVICE_ADDRESS, deviceAddress);
-
         return intentSpeedTestActivity;
     }
 
@@ -41,31 +40,32 @@ public class SpeedTestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_speed_test);
 
+        startGattClientService();
+
         createGui();
-
-        Intent i = getIntent();
-        bleDeviceAddress = i.getStringExtra(EXTRA_DEVICE_ADDRESS);
-
-        intentGattClientService = new Intent(this, GattClientService.class);
-        intentGattClientService.putExtra(EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
-        gattClientServiceStatus = true;
-        startService(intentGattClientService);
-        bindService(intentGattClientService, serviceConnection, Context.BIND_AUTO_CREATE);
-
     }
 
-    private ServiceConnection serviceConnection = new ServiceConnection() {
+    private void startGattClientService() {
+        Intent i = getIntent();
+        bleDeviceAddress = i.getStringExtra(EXTRA_DEVICE_ADDRESS);
+        intentGattClientService = new Intent(this, GattClientService.class);
+        intentGattClientService.putExtra(EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
+        startService(intentGattClientService);
+        bindService(intentGattClientService, serviceConnectionCallback, Context.BIND_AUTO_CREATE);
+    }
+
+    private ServiceConnection serviceConnectionCallback = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             GattClientService.LocalBinder binder = (GattClientService.LocalBinder) service;
             mGattClientService = binder.getService();
-            gattClientServiceStatus = true;
+            mGattClientServiceIsBound = true;
             Log.i(TAG, "onServiceConnected: Component name: " + name.toString());
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            gattClientServiceStatus = false;
+            mGattClientServiceIsBound = false;
             Log.i(TAG, "onServiceDisconnected: Component name: " + name.toString());
         }
     };
@@ -73,6 +73,7 @@ public class SpeedTestActivity extends AppCompatActivity {
     private void createGui() {
         bleSpeedDeviceAddress = (TextView) findViewById(R.id.txtSpeedDeviceAddress);
         bleSpeedDeviceAddress.setText(bleDeviceAddress);
+
 
         btnClose = (Button) findViewById(R.id.btnClose);
     }
@@ -89,9 +90,10 @@ public class SpeedTestActivity extends AppCompatActivity {
     }
 
     private void speedTestActivityCleanUp() {
-        if (gattClientServiceStatus) {
-            unbindService(serviceConnection);
-            gattClientServiceStatus = false;
+        mGattClientService.disconnectFromGattServer();
+        if (mGattClientServiceIsBound) {
+            unbindService(serviceConnectionCallback);
+            mGattClientServiceIsBound = false;
         }
         stopService(intentGattClientService);
         finish();

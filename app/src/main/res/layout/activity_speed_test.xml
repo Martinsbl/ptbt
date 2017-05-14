@@ -18,5 +18,12 @@
         android:text="Close"
         android:onClick="onButtonSpeedTestActivityClick"/>
 
+    <Button
+        android:id="@+id/btnRead"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Read"
+        android:onClick="onButtonSpeedTestActivityClick"/>
+
 
 </LinearLayout>

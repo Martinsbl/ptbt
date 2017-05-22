@@ -11,6 +11,18 @@
         android:layout_height="wrap_content"
         tools:text="Test"/>
 
+    <TextView
+        android:id="@+id/txtSpeedDeviceFw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="4654"/>
+
+    <TextView
+        android:id="@+id/txtSpeedDeviceHw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="nRF52"/>
+
     <Button
         android:id="@+id/btnClose"
         android:layout_width="150dp"

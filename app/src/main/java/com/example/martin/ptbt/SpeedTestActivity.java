@@ -29,13 +29,10 @@ public class SpeedTestActivity extends AppCompatActivity {
 
     private static final String TAG = "SpeedTestActivity";
     public static final String EXTRA_DEVICE_ADDRESS = "com.example.mabo.myapplication.EXTRA_DEVICE_ADDRESS";
-    public static final String EXTRA_NRF_SPEED_DEVICE = "com.example.mabo.myapplication.EXTRA_NRF_SPEED_DEVICE";
 
-    private TextView bleSpeedDeviceAddress;
+    private TextView bleSpeedDeviceAddress, deviceFw, deviceHw;
     private String bleDeviceAddress;
     private Button btnClose, btnRead;
-
-    private NrfSpeedDevice mNrfSpeedDevice;
 
     Intent intentGattClientService;
     private GattClientService mGattClientService;
@@ -52,9 +49,7 @@ public class SpeedTestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_speed_test);
 
-        mNrfSpeedDevice = new NrfSpeedDevice();
         startGattClientService();
-
         createGui();
     }
 
@@ -76,6 +71,8 @@ public class SpeedTestActivity extends AppCompatActivity {
         intentFilter.addAction(GattClientService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(GattClientService.ACTION_NOT_SUPPORTED);
         intentFilter.addAction(GattClientService.ACTION_GATT_ON_CHARACTERISTIC_READ);
+        intentFilter.addAction(GattClientService.ACTION_GATT_FW_CHARACTERISTIC_READ);
+        intentFilter.addAction(GattClientService.ACTION_GATT_HW_CHARACTERISTIC_READ);
         return intentFilter;
     }
 
@@ -83,22 +80,55 @@ public class SpeedTestActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            final byte[] rawBytes = intent.getByteArrayExtra(GattClientService.EXTRA_DATA);
+
             Log.i(TAG, "onReceive: Action: " + action);
             switch (action) {
                 case GattClientService.ACTION_GATT_CONNECTED:
+                    btnRead.setEnabled(true);
                     Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
                     break;
                 case GattClientService.ACTION_GATT_DISCONNECTED:
-                    // Not yet implemented because Broadcast receiver gets unregistered before callback
+                    // Not yet implemented because Broadcast receiver gets unregistered before gatt callback
+                    btnRead.setEnabled(false);
                     break;
                 case GattClientService.ACTION_GATT_SERVICES_DISCOVERED:
+                    mGattClientService.readDeviceInformation();
                     break;
-
+                case GattClientService.ACTION_GATT_ON_CHARACTERISTIC_READ:
+                    break;
+                case GattClientService.ACTION_GATT_FW_CHARACTERISTIC_READ:
+                    final String firmware = "Firmware: " + byteArrayToString(rawBytes);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            deviceFw.setText(firmware);
+                        }
+                    });
+                    break;
+                case GattClientService.ACTION_GATT_HW_CHARACTERISTIC_READ:
+                    final String hardware = "Firmware: " + byteArrayToString(rawBytes);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            deviceHw.setText(hardware);
+                        }
+                    });
+                    break;
                 default:
                     break;
             }
         }
     };
+
+    private String byteArrayToString(byte[] byteArray) {
+        try {
+            return new String(byteArray, "UTF-8");
+        } catch (Exception e) {
+            Log.e(TAG, "broadcastReceiver: " + e.toString());
+            return "Failed to convert string";
+        }
+    }
 
     private ServiceConnection serviceConnectionCallback = new ServiceConnection() {
         @Override
@@ -119,10 +149,12 @@ public class SpeedTestActivity extends AppCompatActivity {
     private void createGui() {
         bleSpeedDeviceAddress = (TextView) findViewById(R.id.txtSpeedDeviceAddress);
         bleSpeedDeviceAddress.setText(bleDeviceAddress);
-
+        deviceFw = (TextView) findViewById(R.id.txtSpeedDeviceFw);
+        deviceHw = (TextView) findViewById(R.id.txtSpeedDeviceHw);
 
         btnClose = (Button) findViewById(R.id.btnClose);
         btnRead = (Button) findViewById(R.id.btnRead);
+        btnRead.setEnabled(false);
     }
 
     public void onButtonSpeedTestActivityClick(View view) {

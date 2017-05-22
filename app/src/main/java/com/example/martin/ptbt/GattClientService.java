@@ -35,6 +35,9 @@ public class GattClientService extends Service {
     public static final String ACTION_GATT_SERVICES_DISCOVERED = "com.example.martin.ptbt.ACTION_GATT_SERVICES_DISCOVERED";
     public static final String ACTION_NOT_SUPPORTED = "com.example.martin.ptbt.ACTION_NOT_SUPPORTED";
     public static final String ACTION_GATT_ON_CHARACTERISTIC_READ = "com.example.mabo.myapplication.ACTION_GATT_ON_CHARACTERISTIC_READ";
+    public static final String ACTION_GATT_FW_CHARACTERISTIC_READ = "com.example.mabo.myapplication.ACTION_GATT_FW_CHARACTERISTIC_READ";
+    public static final String ACTION_GATT_HW_CHARACTERISTIC_READ = "com.example.mabo.myapplication.ACTION_GATT_HW_CHARACTERISTIC_READ";
+    public static final String EXTRA_DATA = "com.example.mabo.myapplication.EXTRA_DATA";
 
     private final IBinder localBinder = new LocalBinder();
 
@@ -49,6 +52,7 @@ public class GattClientService extends Service {
 
     private String mBleDeviceAddress;
     private BluetoothGatt mGatt;
+    private boolean mIsConnected = false;
 
 
     public class LocalBinder extends Binder {
@@ -109,13 +113,17 @@ public class GattClientService extends Service {
         readCharacteristic(NrfSpeedUUIDs.UUID_SERVICE_DEVICE_INFORMATION, NrfSpeedUUIDs.UUID_CHAR_HW_REVISION);
     }
 
-    public void readCharacteristic(UUID serviceUuid, UUID charUuid) {
-        ServiceCharacteristicBundle uuidBundle = new ServiceCharacteristicBundle();
-        uuidBundle.service = serviceUuid;
-        uuidBundle.characteristic = charUuid;
-        mCharReadQueue.add(uuidBundle);
-        readNextCharInQueue();
-
+    public boolean readCharacteristic(UUID serviceUuid, UUID charUuid) {
+        if (mIsConnected) {
+            ServiceCharacteristicBundle uuidBundle = new ServiceCharacteristicBundle();
+            uuidBundle.service = serviceUuid;
+            uuidBundle.characteristic = charUuid;
+            mCharReadQueue.add(uuidBundle);
+            readNextCharInQueue();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void readNextCharInQueue() {
@@ -136,9 +144,11 @@ public class GattClientService extends Service {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+                mIsConnected = true;
                 mGatt.discoverServices();
                 broadcastUpdate(ACTION_GATT_CONNECTED);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                mIsConnected = false;
 //                broadcastUpdate(ACTION_GATT_DISCONNECTED); Broadcast receiver gets unregistered before callback
             }
         }
@@ -193,9 +203,18 @@ public class GattClientService extends Service {
     }
 
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
-        final Intent intent = new Intent(action);
+        Intent intent;
+        if (NrfSpeedUUIDs.UUID_CHAR_FW_REVISION.equals(characteristic.getUuid())) {
+            intent = new Intent(ACTION_GATT_FW_CHARACTERISTIC_READ);
+            intent.putExtra(EXTRA_DATA, characteristic.getValue());
+        }else if (NrfSpeedUUIDs.UUID_CHAR_HW_REVISION.equals(characteristic.getUuid())) {
+            intent = new Intent(ACTION_GATT_HW_CHARACTERISTIC_READ);
+            intent.putExtra(EXTRA_DATA, characteristic.getValue());
+        } else {
+            intent = new Intent(action);
+        }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        Log.i(TAG, "broadcastUpdate: Char value: " + characteristic.getValue()[0]);
+        Log.i(TAG, "broadcastUpdate: Intent: " + intent.getAction() + ", value: " + characteristic.getValue()[0]);
     }
 
 }

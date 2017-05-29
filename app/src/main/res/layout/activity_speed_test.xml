@@ -23,6 +23,13 @@
         android:layout_height="wrap_content"
         tools:text="nRF52"/>
 
+
+    <TextView
+        android:id="@+id/txtSystemId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="123"/>
+
     <Button
         android:id="@+id/btnClose"
         android:layout_width="150dp"

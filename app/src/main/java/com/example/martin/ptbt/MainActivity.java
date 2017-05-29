@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 promptForPermission();
             }
 
-            final ParcelUuid amtUuid = new ParcelUuid(NrfSpeedUUIDs.UUID_SERVICE_AMT);
+            final ParcelUuid amtUuid = new ParcelUuid(NrfSpeedUUIDs.SPEED_SERVICE_UUID_BASE);
             scanFilterList = new ArrayList<>();
             scanFilterList.add(new ScanFilter.Builder().setServiceUuid(amtUuid).build());
             mScanner = BluetoothLeScannerCompat.getScanner();

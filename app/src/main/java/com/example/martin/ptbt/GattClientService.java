@@ -16,7 +16,6 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -35,8 +34,11 @@ public class GattClientService extends Service {
     public static final String ACTION_GATT_SERVICES_DISCOVERED = "com.example.martin.ptbt.ACTION_GATT_SERVICES_DISCOVERED";
     public static final String ACTION_NOT_SUPPORTED = "com.example.martin.ptbt.ACTION_NOT_SUPPORTED";
     public static final String ACTION_GATT_ON_CHARACTERISTIC_READ = "com.example.mabo.myapplication.ACTION_GATT_ON_CHARACTERISTIC_READ";
-    public static final String ACTION_GATT_FW_CHARACTERISTIC_READ = "com.example.mabo.myapplication.ACTION_GATT_FW_CHARACTERISTIC_READ";
-    public static final String ACTION_GATT_HW_CHARACTERISTIC_READ = "com.example.mabo.myapplication.ACTION_GATT_HW_CHARACTERISTIC_READ";
+    public static final String ACTION_GATT_DIS_CHAR_FW_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_FW_READ";
+    public static final String ACTION_GATT_DIS_CHAR_HW_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_HW_READ";
+    public static final String ACTION_GATT_DIS_CHAR_MANUF_NAME_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_MANUF_NAME_READ";
+    public static final String ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ";
+    public static final String ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ";
     public static final String EXTRA_DATA = "com.example.mabo.myapplication.EXTRA_DATA";
 
     private final IBinder localBinder = new LocalBinder();
@@ -109,8 +111,9 @@ public class GattClientService extends Service {
     }
 
     public void readDeviceInformation() {
-        readCharacteristic(NrfSpeedUUIDs.UUID_SERVICE_DEVICE_INFORMATION, NrfSpeedUUIDs.UUID_CHAR_FW_REVISION);
-        readCharacteristic(NrfSpeedUUIDs.UUID_SERVICE_DEVICE_INFORMATION, NrfSpeedUUIDs.UUID_CHAR_HW_REVISION);
+        readCharacteristic(NrfSpeedUUIDs.UUID_SERVICE_DEVICE_INFORMATION, NrfSpeedUUIDs.UUID_CHAR_MANUFACTURER_NAME);
+        readCharacteristic(NrfSpeedUUIDs.UUID_SERVICE_DEVICE_INFORMATION, NrfSpeedUUIDs.UUID_CHAR_MODEL_NUMBER_STRING);
+        readCharacteristic(NrfSpeedUUIDs.UUID_SERVICE_DEVICE_INFORMATION, NrfSpeedUUIDs.UUID_CHAR_SYSTEM_ID);
     }
 
     public boolean readCharacteristic(UUID serviceUuid, UUID charUuid) {
@@ -205,10 +208,19 @@ public class GattClientService extends Service {
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         Intent intent;
         if (NrfSpeedUUIDs.UUID_CHAR_FW_REVISION.equals(characteristic.getUuid())) {
-            intent = new Intent(ACTION_GATT_FW_CHARACTERISTIC_READ);
+            intent = new Intent(ACTION_GATT_DIS_CHAR_FW_READ);
             intent.putExtra(EXTRA_DATA, characteristic.getValue());
         }else if (NrfSpeedUUIDs.UUID_CHAR_HW_REVISION.equals(characteristic.getUuid())) {
-            intent = new Intent(ACTION_GATT_HW_CHARACTERISTIC_READ);
+            intent = new Intent(ACTION_GATT_DIS_CHAR_HW_READ);
+            intent.putExtra(EXTRA_DATA, characteristic.getValue());
+        }else if (NrfSpeedUUIDs.UUID_CHAR_MANUFACTURER_NAME.equals(characteristic.getUuid())) {
+            intent = new Intent(ACTION_GATT_DIS_CHAR_MANUF_NAME_READ);
+            intent.putExtra(EXTRA_DATA, characteristic.getValue());
+        }else if (NrfSpeedUUIDs.UUID_CHAR_MODEL_NUMBER_STRING.equals(characteristic.getUuid())) {
+            intent = new Intent(ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ);
+            intent.putExtra(EXTRA_DATA, characteristic.getValue());
+        }else if (NrfSpeedUUIDs.UUID_CHAR_SYSTEM_ID.equals(characteristic.getUuid())) {
+            intent = new Intent(ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ);
             intent.putExtra(EXTRA_DATA, characteristic.getValue());
         } else {
             intent = new Intent(action);

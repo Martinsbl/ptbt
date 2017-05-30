@@ -15,8 +15,10 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.LoginFilter;
 import android.util.Log;
 
+import java.security.cert.CertificateNotYetValidException;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
@@ -49,8 +51,18 @@ public class GattClientService extends Service {
         UUID service;
         UUID characteristic;
     }
+
+    private class ServiceCharacteristicWriteBundle {
+        UUID service;
+        UUID characteristic;
+        byte[] value;
+    }
+
     private Queue<ServiceCharacteristicBundle> mCharReadQueue = new LinkedList<>();
     private boolean mIsReading = false;
+
+    private Queue<ServiceCharacteristicWriteBundle> mCharWriteQueue = new LinkedList<>();
+    private boolean mIsWriting = false;
 
     private String mBleDeviceAddress;
     private BluetoothGatt mGatt;
@@ -88,8 +100,8 @@ public class GattClientService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // TODO: 13.05.2017  Clean up BLE connection
-        Log.i(TAG, "onDestroy: ");
+        disconnectFromGattServer();
+        Log.i(TAG, "onDestroy: Gatt Client Service");
     }
 
 
@@ -116,17 +128,103 @@ public class GattClientService extends Service {
         readCharacteristic(NrfSpeedUUIDs.UUID_SERVICE_DEVICE_INFORMATION, NrfSpeedUUIDs.UUID_CHAR_SYSTEM_ID);
     }
 
-    public boolean readCharacteristic(UUID serviceUuid, UUID charUuid) {
+
+    public boolean enableConnEvtLengthExtension(boolean enable) {
+        byte[] value = new byte[1];
+        if (enable) {
+            value[0] = 1;
+        } else {
+            value[0] = 0;
+        }
+        return writeCharacteristic(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_CONN_EVENT_LENGTH_EXTENSION_ENABLED_UUID, value);
+    }
+
+    public boolean enableDataLengthExtension(boolean enable) {
+        byte[] value = new byte[1];
+        if (enable) {
+            value[0] = 1;
+        } else {
+            value[0] = 0;
+        }
+        return writeCharacteristic(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_DATA_LENGTH_EXTENSION_UUID, value);
+    }
+
+    public boolean updatePhy(int phy) {
+        // Refer to @defgroup BLE_GAP_PHYS in SDK
+        if (phy == NrfSpeedDevice.BLE_GAP_PHY_1MBPS ||
+                phy == NrfSpeedDevice.BLE_GAP_PHY_2MBPS ||
+                phy == NrfSpeedDevice.BLE_GAP_PHY_AUTO ||
+                phy == NrfSpeedDevice.BLE_GAP_PHY_CODED) {
+            byte[] value = new byte[1];
+            value[0] = (byte) phy;
+            return writeCharacteristic(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_CODED_PHY_CHAR_UUID, value);
+        } else {
+            return false;
+        }
+
+    }
+
+    public boolean updateMtu(int mtu) {
+        byte[] value = new byte[1];
+        value[0] = (byte) mtu;
+        return writeCharacteristic(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_ATT_MTU_UUID, value);
+    }
+
+
+    public boolean updateConnInterval(int connInterval) {
+        byte[] value = new byte[2];
+        value[0] = (byte) connInterval;
+        value[1] = (byte) (connInterval >> 8);
+        return writeCharacteristic(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_CONN_INTERVAL_UUID, value);
+    }
+
+
+    public boolean writeCharacteristic(UUID serviceUuid, UUID charUuid, byte[] value) {
         if (mIsConnected) {
-            ServiceCharacteristicBundle uuidBundle = new ServiceCharacteristicBundle();
-            uuidBundle.service = serviceUuid;
-            uuidBundle.characteristic = charUuid;
-            mCharReadQueue.add(uuidBundle);
-            readNextCharInQueue();
+            ServiceCharacteristicWriteBundle bundle = new ServiceCharacteristicWriteBundle();
+            bundle.service = serviceUuid;
+            bundle.characteristic = charUuid;
+            bundle.value = value;
+            mCharWriteQueue.add(bundle);
+            writeNextCharInQueue();
             return true;
         } else {
             return false;
         }
+    }
+
+    public boolean readCharacteristic(UUID serviceUuid, UUID charUuid) {
+        if (mIsConnected) {
+            try {
+                ServiceCharacteristicBundle uuidBundle = new ServiceCharacteristicBundle();
+                uuidBundle.service = serviceUuid;
+                uuidBundle.characteristic = charUuid;
+                mCharReadQueue.add(uuidBundle);
+                readNextCharInQueue();
+                return true;
+            } catch (Exception e) {
+                Log.i(TAG, "readCharacteristic: Exception: " + e);
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    private void writeNextCharInQueue() {
+        if (mIsWriting) {
+            return;
+        }
+        if (mCharWriteQueue.size() == 0) {
+            return;
+        }
+        mIsWriting = true;
+        ServiceCharacteristicWriteBundle bundle = mCharWriteQueue.poll();
+        BluetoothGattService service = mGatt.getService(bundle.service);
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(bundle.characteristic);
+        characteristic.setValue(bundle.value);
+        mGatt.writeCharacteristic(characteristic);
+        Log.i(TAG, "writeNextCharInQueue: wrote to char: " + characteristic.getUuid());
     }
 
     private void readNextCharInQueue() {
@@ -176,6 +274,9 @@ public class GattClientService extends Service {
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
+            mIsWriting = false;
+            Log.i(TAG, "onCharacteristicWrite: status: " + status);
+            writeNextCharInQueue();
         }
 
         @Override
@@ -196,6 +297,7 @@ public class GattClientService extends Service {
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
+            Log.i(TAG, "onMtuChanged: MTU: " + mtu);
         }
     };
 

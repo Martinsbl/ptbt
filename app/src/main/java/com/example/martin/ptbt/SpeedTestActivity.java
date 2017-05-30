@@ -27,11 +27,13 @@ public class SpeedTestActivity extends AppCompatActivity {
 
     private TextView bleSpeedDeviceAddress, deviceFw, deviceHw, systemId;
     private String bleDeviceAddress;
-    private Button btnClose, btnRead;
+    private Button btnClose, btnEnableDle, btnEnableConnEvtExt;
 
     Intent intentGattClientService;
     private GattClientService mGattClientService;
     boolean mGattClientServiceIsBound = false;
+    private boolean mDataLengthExtensionEnabled = false;
+    private boolean mConnEvtLengthExtensionEnabled = false;
 
     public static Intent createLaunchIntent(Context context, String deviceAddress) {
         Intent intentSpeedTestActivity = new Intent(context, SpeedTestActivity.class);
@@ -83,12 +85,12 @@ public class SpeedTestActivity extends AppCompatActivity {
             Log.i(TAG, "onReceive: Action: " + action);
             switch (action) {
                 case GattClientService.ACTION_GATT_CONNECTED:
-                    btnRead.setEnabled(true);
+                    btnEnableDle.setEnabled(true);
                     Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
                     break;
                 case GattClientService.ACTION_GATT_DISCONNECTED:
                     // Not yet implemented because Broadcast receiver gets unregistered before gatt callback
-                    btnRead.setEnabled(false);
+                    btnEnableDle.setEnabled(false);
                     break;
                 case GattClientService.ACTION_GATT_SERVICES_DISCOVERED:
                     mGattClientService.readDeviceInformation();
@@ -178,19 +180,46 @@ public class SpeedTestActivity extends AppCompatActivity {
         deviceHw = (TextView) findViewById(R.id.txtSpeedDeviceHw);
         systemId = (TextView) findViewById(R.id.txtSystemId);
 
-        btnClose = (Button) findViewById(R.id.btnClose);
-        btnRead = (Button) findViewById(R.id.btnRead);
-        btnRead.setEnabled(false);
+        btnClose = (Button) findViewById(R.id.btnDisconnect);
+        btnEnableDle = (Button) findViewById(R.id.btnSetDataLengthExtension);
+        btnEnableDle.setEnabled(false);
+        btnEnableConnEvtExt = (Button) findViewById(R.id.btnEnableConnEvtLengthExtension);
     }
 
     public void onButtonSpeedTestActivityClick(View view) {
         switch (view.getId()) {
-            case R.id.btnClose:
-                speedTestActivityCleanUp();
+            case R.id.btnUpdatePhy:
+                mGattClientService.updatePhy(NrfSpeedDevice.BLE_GAP_PHY_1MBPS);
                 break;
-            case R.id.btnRead:
-                mGattClientService.readDeviceInformation();
-//                mGattClientService.readCharacteristic(NrfSpeedUUIDs.UUID_SERVICE_DEVICE_INFORMATION, NrfSpeedUUIDs.UUID_CHAR_FW_REVISION);
+            case R.id.btnSetDataLengthExtension:
+                if (mDataLengthExtensionEnabled) {
+                    mGattClientService.enableDataLengthExtension(false);
+                    btnEnableDle.setText("Enable DLE");
+                    mDataLengthExtensionEnabled = false;
+                } else {
+                    mGattClientService.enableDataLengthExtension(true);
+                    btnEnableDle.setText("Disable DLE");
+                    mDataLengthExtensionEnabled = true;
+                }
+                break;
+            case R.id.btnUpdateMtu:
+                mGattClientService.updateMtu(158);
+                break;
+            case R.id.btnUpdateConnInterval:
+                mGattClientService.updateConnInterval(1234);
+                break;
+            case R.id.btnEnableConnEvtLengthExtension:
+                if (mDataLengthExtensionEnabled) {
+                    mGattClientService.enableConnEvtLengthExtension(false);
+                    btnEnableConnEvtExt.setText("Enable CEE");
+                    mConnEvtLengthExtensionEnabled = false;
+                } else {
+                    mGattClientService.enableConnEvtLengthExtension(true);
+                    btnEnableConnEvtExt.setText("Disable CEE");
+                    mConnEvtLengthExtensionEnabled = true;
+                }
+            case R.id.btnDisconnect:
+                speedTestActivityCleanUp();
                 break;
             default:
                 break;

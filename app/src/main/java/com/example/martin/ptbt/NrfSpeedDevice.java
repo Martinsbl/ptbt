@@ -19,8 +19,17 @@ import java.util.UUID;
 public class NrfSpeedDevice {
 
     private List<BluetoothGattService> mBleServices;
+    private List<BluetoothGattCharacteristic> mBleDisChars;
+    private List<BluetoothGattCharacteristic> mBleAmtChars;
     private BluetoothGattService mDeviceInformationService;
     private BluetoothGattService mAmtService;
+
+    // Refer to @defgroup BLE_GAP_PHYS GAP PHY in SDK
+    public final static int BLE_GAP_PHY_AUTO = 0;
+    public final static int BLE_GAP_PHY_1MBPS = 1;
+    public final static int BLE_GAP_PHY_2MBPS = 2;
+    public final static int BLE_GAP_PHY_CODED = 4;
+
 
     public BluetoothGattService getmDeviceInformationService() {
         return mDeviceInformationService;
@@ -30,7 +39,6 @@ public class NrfSpeedDevice {
         this.mDeviceInformationService = mDeviceInformationService;
     }
 
-    private List<BluetoothGattCharacteristic> mCharDeviceInformation;
 
     public NrfSpeedDevice() {
     }
@@ -44,15 +52,26 @@ public class NrfSpeedDevice {
         populateAttributeTable(mBleServices);
     }
 
+
     public void populateAttributeTable(List<BluetoothGattService> services) {
         mBleServices = services;
         for (BluetoothGattService service : mBleServices) {
             if (NrfSpeedUUIDs.UUID_SERVICE_DEVICE_INFORMATION.equals(service.getUuid())) {
                 mDeviceInformationService = service;
-            } else if (NrfSpeedUUIDs.UUID_CHAR_AMTS.equals(service.getUuid())) {
+                mBleDisChars = service.getCharacteristics();
+            } else if (NrfSpeedUUIDs.SPEED_SERVICE_UUID.equals(service.getUuid())) {
                 mAmtService = service;
+                mBleAmtChars = service.getCharacteristics();
             }
         }
+    }
 
+
+    public List<BluetoothGattCharacteristic> getBleAmtChars() {
+        return mBleAmtChars;
+    }
+
+    public BluetoothGattService getAmtService() {
+        return mAmtService;
     }
 }

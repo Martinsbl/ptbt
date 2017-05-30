@@ -40,4 +40,5 @@ public class NrfSpeedUUIDs {
     final static UUID SPEED_SPAM_CHAR_UUID =                            UUID.fromString("71261427-3692-ae93-e711-8118b6022fe0");
     // TODO: Advertised UUID doesn't match speed service uuid
     final static UUID SPEED_SERVICE_UUID_BASE =                         UUID.fromString("71261420-3692-ae93-e711-8118b6022fe0");
+    final static UUID INVALID_UUID =                         UUID.fromString("71261420-3692-ae93-e711-8114b6022fe0");
 }

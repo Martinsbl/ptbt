@@ -30,19 +30,71 @@
         android:layout_height="wrap_content"
         tools:text="123"/>
 
-    <Button
-        android:id="@+id/btnClose"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:text="Close"
-        android:onClick="onButtonSpeedTestActivityClick"/>
-
-    <Button
-        android:id="@+id/btnRead"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Read"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnUpdatePhy"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:text="Update Phy"
+                android:onClick="onButtonSpeedTestActivityClick"/>
+
+            <Button
+                android:id="@+id/btnUpdateConnInterval"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:text="Update Connection Interval"
+                android:onClick="onButtonSpeedTestActivityClick"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnUpdateMtu"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:text="Update MTU"
+                android:onClick="onButtonSpeedTestActivityClick"/>
+
+            <Button
+                android:id="@+id/btnSetDataLengthExtension"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:text="Enable DLE"
+                android:onClick="onButtonSpeedTestActivityClick"/>
+
+            <Button
+                android:id="@+id/btnEnableConnEvtLengthExtension"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:text="Enable Conn Evt length extension"
+                android:onClick="onButtonSpeedTestActivityClick"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <Button
+        android:id="@+id/btnDisconnect"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:text="Disconnect"
         android:onClick="onButtonSpeedTestActivityClick"/>
+
 
 
 </LinearLayout>

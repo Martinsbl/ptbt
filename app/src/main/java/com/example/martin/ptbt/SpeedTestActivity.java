@@ -31,20 +31,17 @@ public class SpeedTestActivity extends AppCompatActivity {
     public static final String EXTRA_DEVICE_ADDRESS = "com.example.mabo.myapplication.EXTRA_DEVICE_ADDRESS";
 
     private TextView bleSpeedDeviceAddress, txtDeviceFw, txtDeviceHw, txtSystemId;
-    private TextView txtCfgMtu, txtCfgDle, txtCfgCle, txtCfgPhy;
     private Spinner spnrPhy;
     private Switch swCfgDle, swCfgConnEvtExt;
     private EditText etxtMtu, etxtConnInterval;
 
-    private Button btnClose, btnEnableDle, btnEnableConnEvtExt;
 
     Intent intentGattClientService;
     private GattClientService mGattClientService;
     private String bleDeviceAddress;
     boolean mGattClientServiceIsBound = false;
     Boolean mIsConnected = false;
-    private boolean mDataLengthExtensionEnabled = false;
-    private boolean mConnEvtLengthExtensionEnabled = false;
+
 
     public static Intent createLaunchIntent(Context context, String deviceAddress) {
         Intent intentSpeedTestActivity = new Intent(context, SpeedTestActivity.class);
@@ -100,12 +97,12 @@ public class SpeedTestActivity extends AppCompatActivity {
                     Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
                     break;
                 case GattClientService.ACTION_GATT_DISCONNECTED:
-                    // Not yet implemented because Broadcast receiver gets unregistered before gatt callback
                     stopGattClientService();
                     mIsConnected = false;
                     break;
                 case GattClientService.ACTION_GATT_SERVICES_DISCOVERED:
                     mGattClientService.readDeviceInformation();
+                    mGattClientService.enableNotification(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_SPAM_CHAR_UUID);
                     break;
                 case GattClientService.ACTION_GATT_ON_CHARACTERISTIC_READ:
                     break;
@@ -192,11 +189,6 @@ public class SpeedTestActivity extends AppCompatActivity {
         txtDeviceHw = (TextView) findViewById(R.id.txtSpeedDeviceHw);
         txtSystemId = (TextView) findViewById(R.id.txtSystemId);
 
-        txtCfgCle = (TextView) findViewById(R.id.txtCfgConnLenExt);
-        txtCfgDle = (TextView) findViewById(R.id.txtCfgDle);
-        txtCfgMtu = (TextView) findViewById(R.id.txtCfgMtu);
-        txtCfgPhy = (TextView) findViewById(R.id.txtCfgPhy);
-
         etxtMtu = (EditText) findViewById(R.id.etxtCfgMtu);
         etxtConnInterval = (EditText) findViewById(R.id.etxtCfgConnInterval);
         spnrPhy = (Spinner) findViewById(R.id.spnrCfgPhy);
@@ -205,11 +197,6 @@ public class SpeedTestActivity extends AppCompatActivity {
         spnrPhy.setAdapter(adapter);
         swCfgConnEvtExt = (Switch) findViewById(R.id.swCfgConnLenExt);
         swCfgDle = (Switch) findViewById(R.id.swCfgDle);
-
-        btnClose = (Button) findViewById(R.id.btnDisconnect);
-        btnEnableDle = (Button) findViewById(R.id.btnEnableDle);
-        btnEnableDle.setEnabled(false);
-        btnEnableConnEvtExt = (Button) findViewById(R.id.btnEnableConnEvtLengthExtension);
     }
 
     public void updatePhy() {
@@ -227,10 +214,8 @@ public class SpeedTestActivity extends AppCompatActivity {
     public void enableDle() {
         if (swCfgDle.isChecked()) {
             mGattClientService.enableDataLengthExtension(true);
-            mDataLengthExtensionEnabled = true;
         } else {
             mGattClientService.enableDataLengthExtension(false);
-            mDataLengthExtensionEnabled = false;
         }
     }
 
@@ -249,10 +234,8 @@ public class SpeedTestActivity extends AppCompatActivity {
     public void enableConnEvtLenghtExtension() {
         if (swCfgConnEvtExt.isChecked()) {
             mGattClientService.enableConnEvtLengthExtension(true);
-            mConnEvtLengthExtensionEnabled = true;
         } else {
             mGattClientService.enableConnEvtLengthExtension(false);
-            mConnEvtLengthExtensionEnabled = false;
         }
     }
 
@@ -295,10 +278,10 @@ public class SpeedTestActivity extends AppCompatActivity {
     }
 
     private void stopGattClientService() {
-        if (mGattClientService.isConnected()) {
-            Log.i(TAG, "stopGattClientService: STILL CONNECTED.");
-            return;
-        }
+//        if (mGattClientService.isConnected()) {
+//            Log.i(TAG, "stopGattClientService: STILL CONNECTED.");
+//            return;
+//        }
         if (mGattClientServiceIsBound) {
             unbindService(serviceConnectionCallback);
             mGattClientServiceIsBound = false;
@@ -313,11 +296,14 @@ public class SpeedTestActivity extends AppCompatActivity {
     }
 
     private void speedTestActivityCleanUp() {
-        if (mGattClientService.isConnected()) {
-            mGattClientService.disconnectFromGattServer();
-            return;
-        }
+        mGattClientService.disconnectFromGattServer();
         stopGattClientService();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        speedTestActivityCleanUp();
     }
 
     @Override

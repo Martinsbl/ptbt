@@ -3,32 +3,168 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true">
 
-    <TextView
-        android:id="@+id/txtSpeedDeviceAddress"
+
+
+            <TextView
+                android:id="@+id/txtSpeedDeviceAddress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Test"/>
+
+            <TextView
+                android:id="@+id/txtSpeedDeviceFw"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="4654"/>
+
+            <TextView
+                android:id="@+id/txtSpeedDeviceHw"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="nRF52"/>
+
+
+            <TextView
+                android:id="@+id/txtSystemId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="123"/>
+
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="Test"/>
-
-    <TextView
-        android:id="@+id/txtSpeedDeviceFw"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:text="4654"/>
-
-    <TextView
-        android:id="@+id/txtSpeedDeviceHw"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:text="nRF52"/>
+        android:orientation="horizontal">
 
 
-    <TextView
-        android:id="@+id/txtSystemId"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:text="123"/>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtCfgMtu"
+                    android:layout_width="@dimen/cfg_list_txt_with"
+                    android:layout_height="wrap_content"
+                    android:text="MTU:"
+                    android:textSize="@dimen/txt_size_cfg_list"/>
+
+                <EditText
+                    android:id="@+id/etxtCfgMtu"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:digits="0123456789"
+                    android:inputType="number"
+                    android:imeOptions="actionDone"
+                    android:text="23"
+                    android:maxLines="1"
+                    android:nextFocusForward="@+id/etxtCfgConnInterval"  />
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtCfgConnInterval"
+                    android:layout_width="@dimen/cfg_list_txt_with"
+                    android:layout_height="wrap_content"
+                    android:text="Conn Interval [ms]:"
+                    android:textSize="@dimen/txt_size_cfg_list"/>
+
+                <EditText
+                    android:id="@+id/etxtCfgConnInterval"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:digits="0123456789."
+                    android:inputType="numberDecimal"
+                    android:imeOptions="actionDone"
+                    android:text="23"
+                    android:maxLines="1"/>
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtCfgDle"
+                    android:layout_width="@dimen/cfg_list_txt_with"
+                    android:layout_height="wrap_content"
+                    android:text="DLE:"
+                    android:textSize="@dimen/txt_size_cfg_list"/>
+
+                <Switch
+                    android:id="@+id/swCfgDle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtCfgConnLenExt"
+                    android:layout_width="@dimen/cfg_list_txt_with"
+                    android:layout_height="wrap_content"
+                    android:text="Conn. Evt. Extension:"
+                    android:textSize="@dimen/txt_size_cfg_list"/>
+
+                <Switch
+                    android:id="@+id/swCfgConnLenExt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtCfgPhy"
+                    android:layout_width="@dimen/cfg_list_txt_with"
+                    android:layout_height="wrap_content"
+                    android:text="Phy:"
+                    android:textSize="@dimen/txt_size_cfg_list"/>
+
+                <Spinner
+                    android:id="@+id/spnrCfgPhy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="1 Mbps"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -54,6 +190,13 @@
                 android:text="Update Connection Interval"
                 android:onClick="onButtonSpeedTestActivityClick"/>
 
+            <Button
+                android:id="@+id/btnUpdateAllParameters"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:text="Update All"
+                android:onClick="onButtonSpeedTestActivityClick"/>
+
         </LinearLayout>
 
         <LinearLayout
@@ -70,23 +213,29 @@
                 android:onClick="onButtonSpeedTestActivityClick"/>
 
             <Button
-                android:id="@+id/btnSetDataLengthExtension"
+                android:id="@+id/btnEnableDle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/button_height"
-                android:text="Enable DLE"
-                android:onClick="onButtonSpeedTestActivityClick"/>
+                android:onClick="onButtonSpeedTestActivityClick"
+                android:text="Set DLE" />
 
             <Button
                 android:id="@+id/btnEnableConnEvtLengthExtension"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/button_height"
-                android:text="Enable Conn Evt length extension"
-                android:onClick="onButtonSpeedTestActivityClick"/>
+                android:onClick="onButtonSpeedTestActivityClick"
+                android:text="Set Conn Evt length extension" />
 
         </LinearLayout>
 
     </LinearLayout>
 
+    <Button
+        android:id="@+id/btnStartTest"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:text="Start Test"
+        android:onClick="onButtonSpeedTestActivityClick"/>
 
     <Button
         android:id="@+id/btnDisconnect"

@@ -1,4 +1,6 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="button_height">80dp</dimen>
+    <dimen name="cfg_list_txt_with">300dp</dimen>
+    <dimen name="txt_size_cfg_list">30sp</dimen>
 </resources>

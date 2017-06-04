@@ -8,11 +8,16 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.renderscript.Double2;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,13 +30,19 @@ public class SpeedTestActivity extends AppCompatActivity {
     private static final String TAG = "SpeedTestActivity";
     public static final String EXTRA_DEVICE_ADDRESS = "com.example.mabo.myapplication.EXTRA_DEVICE_ADDRESS";
 
-    private TextView bleSpeedDeviceAddress, deviceFw, deviceHw, systemId;
-    private String bleDeviceAddress;
+    private TextView bleSpeedDeviceAddress, txtDeviceFw, txtDeviceHw, txtSystemId;
+    private TextView txtCfgMtu, txtCfgDle, txtCfgCle, txtCfgPhy;
+    private Spinner spnrPhy;
+    private Switch swCfgDle, swCfgConnEvtExt;
+    private EditText etxtMtu, etxtConnInterval;
+
     private Button btnClose, btnEnableDle, btnEnableConnEvtExt;
 
     Intent intentGattClientService;
     private GattClientService mGattClientService;
+    private String bleDeviceAddress;
     boolean mGattClientServiceIsBound = false;
+    Boolean mIsConnected = false;
     private boolean mDataLengthExtensionEnabled = false;
     private boolean mConnEvtLengthExtensionEnabled = false;
 
@@ -85,12 +96,13 @@ public class SpeedTestActivity extends AppCompatActivity {
             Log.i(TAG, "onReceive: Action: " + action);
             switch (action) {
                 case GattClientService.ACTION_GATT_CONNECTED:
-                    btnEnableDle.setEnabled(true);
+                    mIsConnected = true;
                     Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
                     break;
                 case GattClientService.ACTION_GATT_DISCONNECTED:
                     // Not yet implemented because Broadcast receiver gets unregistered before gatt callback
-                    btnEnableDle.setEnabled(false);
+                    stopGattClientService();
+                    mIsConnected = false;
                     break;
                 case GattClientService.ACTION_GATT_SERVICES_DISCOVERED:
                     mGattClientService.readDeviceInformation();
@@ -102,7 +114,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            deviceFw.setText(firmware);
+                            txtDeviceFw.setText(firmware);
                         }
                     });
                     break;
@@ -111,7 +123,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            deviceHw.setText(hardware);
+                            txtDeviceHw.setText(hardware);
                         }
                     });
                     break;
@@ -120,7 +132,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            deviceHw.setText(manufacturerName);
+                            txtDeviceHw.setText(manufacturerName);
                         }
                     });
                     break;
@@ -129,7 +141,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            deviceFw.setText(modelNumber);
+                            txtDeviceFw.setText(modelNumber);
                         }
                     });
                     break;
@@ -138,7 +150,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            systemId.setText(sysId);
+                            txtSystemId.setText(sysId);
                         }
                     });
                     break;
@@ -176,48 +188,103 @@ public class SpeedTestActivity extends AppCompatActivity {
     private void createGui() {
         bleSpeedDeviceAddress = (TextView) findViewById(R.id.txtSpeedDeviceAddress);
         bleSpeedDeviceAddress.setText(bleDeviceAddress);
-        deviceFw = (TextView) findViewById(R.id.txtSpeedDeviceFw);
-        deviceHw = (TextView) findViewById(R.id.txtSpeedDeviceHw);
-        systemId = (TextView) findViewById(R.id.txtSystemId);
+        txtDeviceFw = (TextView) findViewById(R.id.txtSpeedDeviceFw);
+        txtDeviceHw = (TextView) findViewById(R.id.txtSpeedDeviceHw);
+        txtSystemId = (TextView) findViewById(R.id.txtSystemId);
+
+        txtCfgCle = (TextView) findViewById(R.id.txtCfgConnLenExt);
+        txtCfgDle = (TextView) findViewById(R.id.txtCfgDle);
+        txtCfgMtu = (TextView) findViewById(R.id.txtCfgMtu);
+        txtCfgPhy = (TextView) findViewById(R.id.txtCfgPhy);
+
+        etxtMtu = (EditText) findViewById(R.id.etxtCfgMtu);
+        etxtConnInterval = (EditText) findViewById(R.id.etxtCfgConnInterval);
+        spnrPhy = (Spinner) findViewById(R.id.spnrCfgPhy);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.phy_array, android.R.layout.simple_spinner_dropdown_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spnrPhy.setAdapter(adapter);
+        swCfgConnEvtExt = (Switch) findViewById(R.id.swCfgConnLenExt);
+        swCfgDle = (Switch) findViewById(R.id.swCfgDle);
 
         btnClose = (Button) findViewById(R.id.btnDisconnect);
-        btnEnableDle = (Button) findViewById(R.id.btnSetDataLengthExtension);
+        btnEnableDle = (Button) findViewById(R.id.btnEnableDle);
         btnEnableDle.setEnabled(false);
         btnEnableConnEvtExt = (Button) findViewById(R.id.btnEnableConnEvtLengthExtension);
+    }
+
+    public void updatePhy() {
+        if (spnrPhy.getSelectedItem().toString().equals("1 Mbps")) {
+            mGattClientService.updatePhy(NrfSpeedDevice.BLE_GAP_PHY_1MBPS);
+        } else if (spnrPhy.getSelectedItem().toString().equals("2 Mbps")) {
+            mGattClientService.updatePhy(NrfSpeedDevice.BLE_GAP_PHY_2MBPS);
+        } else if (spnrPhy.getSelectedItem().toString().equals("Coded")) {
+            mGattClientService.updatePhy(NrfSpeedDevice.BLE_GAP_PHY_CODED);
+        } else {
+            Log.i(TAG, "onButtonSpeedTestActivityClick: Something went wrong when selecting PHY.");
+        }
+    }
+
+    public void enableDle() {
+        if (swCfgDle.isChecked()) {
+            mGattClientService.enableDataLengthExtension(true);
+            mDataLengthExtensionEnabled = true;
+        } else {
+            mGattClientService.enableDataLengthExtension(false);
+            mDataLengthExtensionEnabled = false;
+        }
+    }
+
+    public void updateMtu() {
+        int mtu = Integer.parseInt(etxtMtu.getText().toString());
+        mGattClientService.updateMtu(mtu);
+    }
+
+    public void updateConnectionInterval() {
+        double connIntervalDouble = Double.parseDouble(etxtConnInterval.getText().toString());
+        int connInterval = (int) (connIntervalDouble / 1.25);
+        Log.i(TAG, "updateConnectionInterval: Double: " + etxtConnInterval.getText().toString() + ". int: " + connInterval);
+        mGattClientService.updateConnInterval(connInterval);
+    }
+
+    public void enableConnEvtLenghtExtension() {
+        if (swCfgConnEvtExt.isChecked()) {
+            mGattClientService.enableConnEvtLengthExtension(true);
+            mConnEvtLengthExtensionEnabled = true;
+        } else {
+            mGattClientService.enableConnEvtLengthExtension(false);
+            mConnEvtLengthExtensionEnabled = false;
+        }
     }
 
     public void onButtonSpeedTestActivityClick(View view) {
         switch (view.getId()) {
             case R.id.btnUpdatePhy:
-                mGattClientService.updatePhy(NrfSpeedDevice.BLE_GAP_PHY_1MBPS);
+                updatePhy();
                 break;
-            case R.id.btnSetDataLengthExtension:
-                if (mDataLengthExtensionEnabled) {
-                    mGattClientService.enableDataLengthExtension(false);
-                    btnEnableDle.setText("Enable DLE");
-                    mDataLengthExtensionEnabled = false;
-                } else {
-                    mGattClientService.enableDataLengthExtension(true);
-                    btnEnableDle.setText("Disable DLE");
-                    mDataLengthExtensionEnabled = true;
-                }
+            case R.id.btnEnableDle:
+                enableDle();
                 break;
             case R.id.btnUpdateMtu:
-                mGattClientService.updateMtu(158);
+                updateMtu();
                 break;
             case R.id.btnUpdateConnInterval:
-                mGattClientService.updateConnInterval(1234);
+                updateConnectionInterval();
                 break;
             case R.id.btnEnableConnEvtLengthExtension:
-                if (mDataLengthExtensionEnabled) {
-                    mGattClientService.enableConnEvtLengthExtension(false);
-                    btnEnableConnEvtExt.setText("Enable CEE");
-                    mConnEvtLengthExtensionEnabled = false;
-                } else {
-                    mGattClientService.enableConnEvtLengthExtension(true);
-                    btnEnableConnEvtExt.setText("Disable CEE");
-                    mConnEvtLengthExtensionEnabled = true;
+                enableConnEvtLenghtExtension();
+                break;
+            case R.id.btnUpdateAllParameters:
+                updateMtu();
+                updatePhy();
+                enableConnEvtLenghtExtension();
+                enableDle();
+                updateConnectionInterval();
+                break;
+            case R.id.btnStartTest:
+                if (!mGattClientService.isTestRunning()) {
+                    mGattClientService.startSpeedTest(true);
                 }
+                break;
             case R.id.btnDisconnect:
                 speedTestActivityCleanUp();
                 break;
@@ -227,19 +294,30 @@ public class SpeedTestActivity extends AppCompatActivity {
         }
     }
 
-    private void speedTestActivityCleanUp() {
+    private void stopGattClientService() {
+        if (mGattClientService.isConnected()) {
+            Log.i(TAG, "stopGattClientService: STILL CONNECTED.");
+            return;
+        }
+        if (mGattClientServiceIsBound) {
+            unbindService(serviceConnectionCallback);
+            mGattClientServiceIsBound = false;
+        }
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
         } catch (Exception ignore) {
             Log.e(TAG, ignore.toString());
         }
-        mGattClientService.disconnectFromGattServer();
-        if (mGattClientServiceIsBound) {
-            unbindService(serviceConnectionCallback);
-            mGattClientServiceIsBound = false;
-        }
         stopService(intentGattClientService);
         finish();
+    }
+
+    private void speedTestActivityCleanUp() {
+        if (mGattClientService.isConnected()) {
+            mGattClientService.disconnectFromGattServer();
+            return;
+        }
+        stopGattClientService();
     }
 
     @Override

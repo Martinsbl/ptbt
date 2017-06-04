@@ -67,6 +67,8 @@ public class GattClientService extends Service {
     private String mBleDeviceAddress;
     private BluetoothGatt mGatt;
     private boolean mIsConnected = false;
+    private boolean mIsTestRunning = false;
+    private int mMtu = 0;
 
 
     public class LocalBinder extends Binder {
@@ -118,8 +120,6 @@ public class GattClientService extends Service {
             return;
         }
         mGatt.disconnect();
-        mGatt.close();
-        mGatt = null;
     }
 
     public void readDeviceInformation() {
@@ -178,6 +178,18 @@ public class GattClientService extends Service {
         return writeCharacteristic(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_CONN_INTERVAL_UUID, value);
     }
 
+
+    public boolean startSpeedTest(boolean start) {
+        byte[] command = new byte[1];
+        if (start && !mIsTestRunning) {
+            command[0] = 1;
+            mIsTestRunning = true;
+        } else {
+            command[0] = 2;
+            mIsTestRunning = false;
+        }
+        return writeCharacteristic(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_COMMAND_CHAR_UUID, command);
+    }
 
     public boolean writeCharacteristic(UUID serviceUuid, UUID charUuid, byte[] value) {
         if (mIsConnected) {
@@ -249,8 +261,13 @@ public class GattClientService extends Service {
                 mGatt.discoverServices();
                 broadcastUpdate(ACTION_GATT_CONNECTED);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Log.i(TAG, "onConnectionStateChange: DISONNECTED");
                 mIsConnected = false;
-//                broadcastUpdate(ACTION_GATT_DISCONNECTED); Broadcast receiver gets unregistered before callback
+                if(mGatt != null) {
+                    mGatt.close();
+                    mGatt = null;
+                }
+                broadcastUpdate(ACTION_GATT_DISCONNECTED);
             }
         }
 
@@ -297,12 +314,18 @@ public class GattClientService extends Service {
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
+            mMtu = mtu;
             Log.i(TAG, "onMtuChanged: MTU: " + mtu);
         }
     };
 
 
     private void broadcastUpdate(final String action) {
+        final Intent intent = new Intent(action);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void broadcastUpdate(final String action, int integerValue) {
         final Intent intent = new Intent(action);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
@@ -331,4 +354,15 @@ public class GattClientService extends Service {
         Log.i(TAG, "broadcastUpdate: Intent: " + intent.getAction() + ", value: " + characteristic.getValue()[0]);
     }
 
+    public int getMtu() {
+        return mMtu;
+    }
+
+    public boolean isConnected() {
+        return mIsConnected;
+    }
+
+    public boolean isTestRunning() {
+        return mIsTestRunning;
+    }
 }

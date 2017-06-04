@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="phy_array">
+        <item>1 Mbps</item>
+        <item>2 Mbps</item>
+        <item>Coded</item>
+    </string-array>
+</resources>

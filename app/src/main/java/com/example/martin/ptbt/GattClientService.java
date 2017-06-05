@@ -80,10 +80,6 @@ public class GattClientService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand: ");
-        mBleDeviceAddress = intent.getStringExtra(SpeedTestActivity.EXTRA_DEVICE_ADDRESS);
-        mNrfSpeedDevice = new NrfSpeedDevice();
-        connectToGattServer();
-
         return Service.START_REDELIVER_INTENT;
     }
 
@@ -96,18 +92,26 @@ public class GattClientService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.i(TAG, "onBind: " + intent.toString());
+        mBleDeviceAddress = intent.getStringExtra(SpeedTestActivity.EXTRA_DEVICE_ADDRESS);
+        mNrfSpeedDevice = new NrfSpeedDevice();
+        connectToGattServer();
         return localBinder;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Log.i(TAG, "onUnbind: UNBIND");
+        closeGattClient();
+        stopSelf();
+        return super.onUnbind(intent);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        disconnectFromGattServer();
+//        disconnectFromGattServer();
         Log.i(TAG, "onDestroy: Gatt Client Service");
     }
-
-
-
 
     private void connectToGattServer() {
         final BluetoothManager bleManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
@@ -117,11 +121,18 @@ public class GattClientService extends Service {
         mGatt = bleDevice.connectGatt(this, false, gattCallback);
     }
 
-    public void disconnectFromGattServer() {
+    private void shutDownService() {
+        closeGattClient();
+        stopSelf();
+    }
+
+    private void closeGattClient() {
         if (mGatt == null) {
             return;
         }
-        mGatt.disconnect();
+        mBleDeviceAddress = null;
+        mGatt.close();
+        mGatt = null;
     }
 
     public void readDeviceInformation() {
@@ -296,11 +307,8 @@ public class GattClientService extends Service {
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.i(TAG, "onConnectionStateChange: DISONNECTED");
                 mIsConnected = false;
-                if(mGatt != null) {
-                    mGatt.close();
-                    mGatt = null;
-                }
                 broadcastUpdate(ACTION_GATT_DISCONNECTED);
+//                shutDownService();
             }
         }
 
@@ -360,11 +368,6 @@ public class GattClientService extends Service {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    private void broadcastUpdate(final String action, int integerValue) {
-        final Intent intent = new Intent(action);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-    }
-
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         Intent intent;
         if (NrfSpeedUUIDs.UUID_CHAR_FW_REVISION.equals(characteristic.getUuid())) {
@@ -399,5 +402,9 @@ public class GattClientService extends Service {
 
     public boolean isTestRunning() {
         return mIsTestRunning;
+    }
+
+    public BluetoothGatt getGatt() {
+        return mGatt;
     }
 }

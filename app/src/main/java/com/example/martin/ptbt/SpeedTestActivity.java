@@ -1,5 +1,6 @@
 package com.example.martin.ptbt;
 
+import android.bluetooth.BluetoothGatt;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -9,6 +10,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.renderscript.Double2;
+import android.support.v4.app.NotificationCompatSideChannelService;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -21,6 +23,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 /**
  * Created by Martin on 10.05.2017.
  */
@@ -30,7 +34,7 @@ public class SpeedTestActivity extends AppCompatActivity {
     private static final String TAG = "SpeedTestActivity";
     public static final String EXTRA_DEVICE_ADDRESS = "com.example.mabo.myapplication.EXTRA_DEVICE_ADDRESS";
 
-    private TextView bleSpeedDeviceAddress, txtDeviceFw, txtDeviceHw, txtSystemId;
+    private TextView txtDeviceFw, txtDeviceHw, txtSystemId;
     private Spinner spnrPhy;
     private Switch swCfgDle, swCfgConnEvtExt;
     private EditText etxtMtu, etxtConnInterval;
@@ -40,7 +44,6 @@ public class SpeedTestActivity extends AppCompatActivity {
     private GattClientService mGattClientService;
     private String bleDeviceAddress;
     boolean mGattClientServiceIsBound = false;
-    Boolean mIsConnected = false;
 
 
     public static Intent createLaunchIntent(Context context, String deviceAddress) {
@@ -60,13 +63,14 @@ public class SpeedTestActivity extends AppCompatActivity {
 
     private void startGattClientService() {
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, makeGattUpdateIntentFilter());
-
+        Log.i(TAG, "startGattClientService: START CLIENT SERVICE");
         Intent i = getIntent();
         bleDeviceAddress = i.getStringExtra(EXTRA_DEVICE_ADDRESS);
         intentGattClientService = new Intent(this, GattClientService.class);
         intentGattClientService.putExtra(EXTRA_DEVICE_ADDRESS, bleDeviceAddress);
-        startService(intentGattClientService);
-        bindService(intentGattClientService, serviceConnectionCallback, Context.BIND_AUTO_CREATE);
+        if (!bindService(intentGattClientService, serviceConnectionCallback, Context.BIND_AUTO_CREATE)) {
+            Log.i(TAG, "startGattClientService: BINDING UNSUCCESSFUL");
+        }
     }
 
     private IntentFilter makeGattUpdateIntentFilter() {
@@ -93,12 +97,9 @@ public class SpeedTestActivity extends AppCompatActivity {
             Log.i(TAG, "onReceive: Action: " + action);
             switch (action) {
                 case GattClientService.ACTION_GATT_CONNECTED:
-                    mIsConnected = true;
                     Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
                     break;
                 case GattClientService.ACTION_GATT_DISCONNECTED:
-                    stopGattClientService();
-                    mIsConnected = false;
                     break;
                 case GattClientService.ACTION_GATT_SERVICES_DISCOVERED:
                     mGattClientService.readDeviceInformation();
@@ -177,13 +178,14 @@ public class SpeedTestActivity extends AppCompatActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mGattClientServiceIsBound = false;
+            // Not called on unbinds.
             Log.i(TAG, "onServiceDisconnected: Component name: " + name.toString());
+            mGattClientServiceIsBound = false;
         }
     };
 
     private void createGui() {
-        bleSpeedDeviceAddress = (TextView) findViewById(R.id.txtSpeedDeviceAddress);
+        TextView bleSpeedDeviceAddress = (TextView) findViewById(R.id.txtSpeedDeviceAddress);
         bleSpeedDeviceAddress.setText(bleDeviceAddress);
         txtDeviceFw = (TextView) findViewById(R.id.txtSpeedDeviceFw);
         txtDeviceHw = (TextView) findViewById(R.id.txtSpeedDeviceHw);
@@ -269,7 +271,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.btnDisconnect:
-                speedTestActivityCleanUp();
+                finish();
                 break;
             default:
                 break;
@@ -278,36 +280,33 @@ public class SpeedTestActivity extends AppCompatActivity {
     }
 
     private void stopGattClientService() {
-//        if (mGattClientService.isConnected()) {
-//            Log.i(TAG, "stopGattClientService: STILL CONNECTED.");
-//            return;
-//        }
+        mGattClientService.getGatt().disconnect();
         if (mGattClientServiceIsBound) {
+            Log.i(TAG, "stopGattClientService: Unbinding service.");
             unbindService(serviceConnectionCallback);
             mGattClientServiceIsBound = false;
+        }
+        if (stopService(intentGattClientService)) {
+            Log.i(TAG, "stopGattClientService: Service stopped.");
         }
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
         } catch (Exception ignore) {
             Log.e(TAG, ignore.toString());
         }
-        stopService(intentGattClientService);
-        finish();
+        mGattClientService = null;
     }
 
-    private void speedTestActivityCleanUp() {
-        mGattClientService.disconnectFromGattServer();
-        stopGattClientService();
-    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        speedTestActivityCleanUp();
+
     }
 
     @Override
     protected void onStop() {
+        stopGattClientService();
         super.onStop();
     }
 }

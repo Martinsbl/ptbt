@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         final ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 // Refresh the devices list every second
-                .setReportDelay(1000)
+                .setReportDelay(500)
                 // Hardware filtering has some issues on selected devices
                 .setUseHardwareFilteringIfSupported(false)
                 // Samsung S6 and S6 Edge report equal value of RSSI for all devices. In this app we ignore the RSSI.

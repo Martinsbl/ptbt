@@ -54,10 +54,10 @@
 
                 <TextView
                     android:id="@+id/txtCfgMtu"
-                    android:layout_width="@dimen/cfg_list_txt_with"
+                    android:layout_width="@dimen/cfg_list_txt_with_layout_large"
                     android:layout_height="wrap_content"
                     android:text="MTU:"
-                    android:textSize="@dimen/txt_size_cfg_list"/>
+                    android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
 
                 <EditText
                     android:id="@+id/etxtCfgMtu"
@@ -80,10 +80,10 @@
 
                 <TextView
                     android:id="@+id/txtCfgConnInterval"
-                    android:layout_width="@dimen/cfg_list_txt_with"
+                    android:layout_width="@dimen/cfg_list_txt_with_layout_large"
                     android:layout_height="wrap_content"
                     android:text="Conn Interval [ms]:"
-                    android:textSize="@dimen/txt_size_cfg_list"/>
+                    android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
 
                 <EditText
                     android:id="@+id/etxtCfgConnInterval"
@@ -105,10 +105,10 @@
 
                 <TextView
                     android:id="@+id/txtCfgDle"
-                    android:layout_width="@dimen/cfg_list_txt_with"
+                    android:layout_width="@dimen/cfg_list_txt_with_layout_large"
                     android:layout_height="wrap_content"
                     android:text="DLE:"
-                    android:textSize="@dimen/txt_size_cfg_list"/>
+                    android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
 
                 <Switch
                     android:id="@+id/swCfgDle"
@@ -125,10 +125,10 @@
 
                 <TextView
                     android:id="@+id/txtCfgConnLenExt"
-                    android:layout_width="@dimen/cfg_list_txt_with"
+                    android:layout_width="@dimen/cfg_list_txt_with_layout_large"
                     android:layout_height="wrap_content"
                     android:text="Conn. Evt. Extension:"
-                    android:textSize="@dimen/txt_size_cfg_list"/>
+                    android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
 
                 <Switch
                     android:id="@+id/swCfgConnLenExt"
@@ -145,10 +145,10 @@
 
                 <TextView
                     android:id="@+id/txtCfgPhy"
-                    android:layout_width="@dimen/cfg_list_txt_with"
+                    android:layout_width="@dimen/cfg_list_txt_with_layout_large"
                     android:layout_height="wrap_content"
                     android:text="Phy:"
-                    android:textSize="@dimen/txt_size_cfg_list"/>
+                    android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
 
                 <Spinner
                     android:id="@+id/spnrCfgPhy"
@@ -179,21 +179,21 @@
             <Button
                 android:id="@+id/btnUpdatePhy"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/button_height_layout_large"
                 android:text="@string/btn_cfg_set_phy"
                 android:onClick="onButtonSpeedTestActivityClick"/>
 
             <Button
                 android:id="@+id/btnUpdateConnInterval"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/button_height_layout_large"
                 android:text="@string/btn_cfg_set_conn_interval"
                 android:onClick="onButtonSpeedTestActivityClick"/>
 
             <Button
                 android:id="@+id/btnUpdateAllParameters"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/button_height_layout_large"
                 android:text="@string/btn_cfg_set_all"
                 android:onClick="onButtonSpeedTestActivityClick"/>
 
@@ -208,21 +208,21 @@
             <Button
                 android:id="@+id/btnUpdateMtu"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/button_height_layout_large"
                 android:text="@string/btn_cfg_set_mtu"
                 android:onClick="onButtonSpeedTestActivityClick"/>
 
             <Button
                 android:id="@+id/btnEnableDle"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/button_height_layout_large"
                 android:onClick="onButtonSpeedTestActivityClick"
                 android:text="@string/btn_cfg_set_dle" />
 
             <Button
                 android:id="@+id/btnEnableConnEvtLengthExtension"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/button_height_layout_large"
                 android:onClick="onButtonSpeedTestActivityClick"
                 android:text="@string/btn_cfg_set_conn_evt_length_extension" />
 
@@ -233,14 +233,14 @@
     <Button
         android:id="@+id/btnStartTest"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/button_height_layout_large"
         android:text="@string/btn_start_test"
         android:onClick="onButtonSpeedTestActivityClick"/>
 
     <Button
         android:id="@+id/btnDisconnect"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/button_height_layout_large"
         android:text="@string/btn_disconnect"
         android:onClick="onButtonSpeedTestActivityClick"/>
 

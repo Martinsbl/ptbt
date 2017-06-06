@@ -15,10 +15,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.LoginFilter;
 import android.util.Log;
 
-import java.security.cert.CertificateNotYetValidException;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
@@ -62,11 +60,15 @@ public class GattClientService extends Service {
     private boolean mIsReading = false;
 
     private Queue<ServiceCharacteristicWriteBundle> mCharWriteQueue = new LinkedList<>();
-    private boolean mIsWriting = false;
+    private Queue<ServiceCharacteristicBundle> mCccdWriteQueue = new LinkedList<>();
+    private boolean mIsWritingChar = false;
+    private boolean mIsWritingCccd = false;
 
     private String mBleDeviceAddress;
     private BluetoothGatt mGatt;
     private boolean mIsConnected = false;
+    private boolean mIsTestRunning = false;
+    private int mMtu = 0;
 
 
     public class LocalBinder extends Binder {
@@ -78,10 +80,6 @@ public class GattClientService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand: ");
-        mBleDeviceAddress = intent.getStringExtra(SpeedTestActivity.EXTRA_DEVICE_ADDRESS);
-        mNrfSpeedDevice = new NrfSpeedDevice();
-        connectToGattServer();
-
         return Service.START_REDELIVER_INTENT;
     }
 
@@ -94,16 +92,26 @@ public class GattClientService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.i(TAG, "onBind: " + intent.toString());
+        mBleDeviceAddress = intent.getStringExtra(SpeedTestActivity.EXTRA_DEVICE_ADDRESS);
+        mNrfSpeedDevice = new NrfSpeedDevice();
+        connectToGattServer();
         return localBinder;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Log.i(TAG, "onUnbind: UNBIND");
+        closeGattClient();
+        stopSelf();
+        return super.onUnbind(intent);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        disconnectFromGattServer();
+//        disconnectFromGattServer();
         Log.i(TAG, "onDestroy: Gatt Client Service");
     }
-
 
     private void connectToGattServer() {
         final BluetoothManager bleManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
@@ -113,11 +121,16 @@ public class GattClientService extends Service {
         mGatt = bleDevice.connectGatt(this, false, gattCallback);
     }
 
-    public void disconnectFromGattServer() {
+    private void shutDownService() {
+        closeGattClient();
+        stopSelf();
+    }
+
+    private void closeGattClient() {
         if (mGatt == null) {
             return;
         }
-        mGatt.disconnect();
+        mBleDeviceAddress = null;
         mGatt.close();
         mGatt = null;
     }
@@ -179,6 +192,18 @@ public class GattClientService extends Service {
     }
 
 
+    public boolean startSpeedTest(boolean start) {
+        byte[] command = new byte[1];
+        if (start && !mIsTestRunning) {
+            command[0] = 1;
+            mIsTestRunning = true;
+        } else {
+            command[0] = 2;
+            mIsTestRunning = false;
+        }
+        return writeCharacteristic(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_COMMAND_CHAR_UUID, command);
+    }
+
     public boolean writeCharacteristic(UUID serviceUuid, UUID charUuid, byte[] value) {
         if (mIsConnected) {
             ServiceCharacteristicWriteBundle bundle = new ServiceCharacteristicWriteBundle();
@@ -211,14 +236,45 @@ public class GattClientService extends Service {
         }
     }
 
+
+    public boolean enableNotification(UUID serviceUuid, UUID charUuid) {
+        if (mIsConnected) {
+            ServiceCharacteristicBundle bundle = new ServiceCharacteristicBundle();
+            bundle.service = serviceUuid;
+            bundle.characteristic = charUuid;
+            mCccdWriteQueue.add(bundle);
+            writeNextCharInQueue();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void writeNextCccdInQueue() {
+        if (mIsWritingCccd) {
+            return;
+        }
+        if (mCccdWriteQueue.size() == 0) {
+            return;
+        }
+        mIsWritingCccd = true;
+        ServiceCharacteristicWriteBundle bundle = mCharWriteQueue.poll();
+        BluetoothGattService service = mGatt.getService(bundle.service);
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(bundle.characteristic);
+        BluetoothGattDescriptor cccd = characteristic.getDescriptor(NrfSpeedUUIDs.UUID_CCCD);
+        cccd.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        mGatt.writeDescriptor(cccd);
+        Log.i(TAG, "writeNextCccdInQueue: wrote to CCCD at char: " + characteristic.getUuid());
+    }
+
     private void writeNextCharInQueue() {
-        if (mIsWriting) {
+        if (mIsWritingChar) {
             return;
         }
         if (mCharWriteQueue.size() == 0) {
             return;
         }
-        mIsWriting = true;
+        mIsWritingChar = true;
         ServiceCharacteristicWriteBundle bundle = mCharWriteQueue.poll();
         BluetoothGattService service = mGatt.getService(bundle.service);
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(bundle.characteristic);
@@ -249,8 +305,10 @@ public class GattClientService extends Service {
                 mGatt.discoverServices();
                 broadcastUpdate(ACTION_GATT_CONNECTED);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Log.i(TAG, "onConnectionStateChange: DISONNECTED");
                 mIsConnected = false;
-//                broadcastUpdate(ACTION_GATT_DISCONNECTED); Broadcast receiver gets unregistered before callback
+                broadcastUpdate(ACTION_GATT_DISCONNECTED);
+//                shutDownService();
             }
         }
 
@@ -274,7 +332,7 @@ public class GattClientService extends Service {
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
-            mIsWriting = false;
+            mIsWritingChar = false;
             Log.i(TAG, "onCharacteristicWrite: status: " + status);
             writeNextCharInQueue();
         }
@@ -292,11 +350,14 @@ public class GattClientService extends Service {
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
+            mIsWritingCccd = false;
+            writeNextCccdInQueue();
         }
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
+            mMtu = mtu;
             Log.i(TAG, "onMtuChanged: MTU: " + mtu);
         }
     };
@@ -331,4 +392,19 @@ public class GattClientService extends Service {
         Log.i(TAG, "broadcastUpdate: Intent: " + intent.getAction() + ", value: " + characteristic.getValue()[0]);
     }
 
+    public int getMtu() {
+        return mMtu;
+    }
+
+    public boolean isConnected() {
+        return mIsConnected;
+    }
+
+    public boolean isTestRunning() {
+        return mIsTestRunning;
+    }
+
+    public BluetoothGatt getGatt() {
+        return mGatt;
+    }
 }

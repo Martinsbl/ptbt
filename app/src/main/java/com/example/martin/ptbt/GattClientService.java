@@ -134,6 +134,7 @@ public class GattClientService extends Service {
         }
         mBleDeviceAddress = null;
         mGatt.close();
+        Log.i(TAG, "closeGattClient: MGATT CLOSE");
         mGatt = null;
     }
 

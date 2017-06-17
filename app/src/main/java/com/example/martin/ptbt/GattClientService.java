@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
@@ -37,18 +36,19 @@ public class GattClientService extends Service {
     public static final String ACTION_GATT_DIS_CHAR_MANUF_NAME_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_MANUF_NAME_READ";
     public static final String ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ";
     public static final String ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ";
+    public static final String ACTION_GATT_SPAM_CHAR_NOTIFY = "com.example.mabo.myapplication.ACTION_GATT_SPAM_CHAR_NOTIFY";
     public static final String EXTRA_DATA = "com.example.mabo.myapplication.EXTRA_DATA";
+    public static final String EXTRA_DATA_INTEGER = "com.example.mabo.myapplication.EXTRA_DATA_INTEGER";
 
     private final IBinder localBinder = new LocalBinder();
 
-//    private NrfSpeedDevice mNrfSpeedDevice;
-
     private String mBleDeviceAddress;
     private BluetoothGatt mGatt = null;
-    CharacteristicReadWriteQueue mCharacteristicReadWriteQueue;
+    CharacteristicTransferQueue mCharacteristicTransferQueue;
     private boolean mIsConnected = false;
     private boolean mIsTestRunning = false;
-    private int mMtu = 0;
+
+    private int mTransferredBytes = 0;
 
 
     public class LocalBinder extends Binder {
@@ -73,7 +73,6 @@ public class GattClientService extends Service {
     public IBinder onBind(Intent intent) {
 
         mBleDeviceAddress = intent.getStringExtra(SpeedTestActivity.EXTRA_DEVICE_ADDRESS);
-//        mNrfSpeedDevice = new NrfSpeedDevice();
         connectToGattServer();
         Log.i(TAG, "onBind: " + intent.toString());
         return localBinder;
@@ -85,7 +84,7 @@ public class GattClientService extends Service {
         final BluetoothDevice bleDevice = bleAdapter.getRemoteDevice(mBleDeviceAddress);
 
         mGatt = bleDevice.connectGatt(this, false, gattCallback);
-        mCharacteristicReadWriteQueue = new CharacteristicReadWriteQueue(mGatt);
+        mCharacteristicTransferQueue = new CharacteristicTransferQueue(mGatt);
         Log.i(TAG, "connectToGattServer:  connect to " + mBleDeviceAddress);
     }
 
@@ -171,19 +170,20 @@ public class GattClientService extends Service {
 
     public boolean startSpeedTest(boolean start) {
         byte[] command = new byte[1];
-        if (start && !mIsTestRunning) {
-            command[0] = 1;
-            mIsTestRunning = true;
-        } else {
-            command[0] = 2;
-            mIsTestRunning = false;
-        }
+        command[0] = 1;
+//        if (start && !mIsTestRunning) {
+//            command[0] = 1;
+//            mIsTestRunning = true;
+//        } else {
+//            command[0] = 2;
+//            mIsTestRunning = false;
+//        }
         return writeCharacteristic(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_COMMAND_CHAR_UUID, command);
     }
 
     public boolean writeCharacteristic(UUID serviceUuid, UUID charUuid, byte[] value) {
         if (mIsConnected) {
-            mCharacteristicReadWriteQueue.characteristicWrite(serviceUuid, charUuid, TransferBundle.AttributeType.CHARACTERISTIC, value);
+            mCharacteristicTransferQueue.characteristicWrite(serviceUuid, charUuid, TransferBundle.AttributeType.CHARACTERISTIC, value);
             return true;
         } else {
             return false;
@@ -192,7 +192,7 @@ public class GattClientService extends Service {
 
     public boolean readCharacteristic(UUID serviceUuid, UUID charUuid) {
         if (mIsConnected) {
-            mCharacteristicReadWriteQueue.characteristicRead(serviceUuid, charUuid, TransferBundle.AttributeType.CHARACTERISTIC);
+            mCharacteristicTransferQueue.characteristicRead(serviceUuid, charUuid, TransferBundle.AttributeType.CHARACTERISTIC);
             return true;
         } else {
             return false;
@@ -202,7 +202,7 @@ public class GattClientService extends Service {
 
     public boolean enableNotification(UUID serviceUuid, UUID charUuid) {
         if (mIsConnected) {
-            mCharacteristicReadWriteQueue.descriptorWrite(serviceUuid, charUuid, TransferBundle.AttributeType.CCCD, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            mCharacteristicTransferQueue.descriptorWrite(serviceUuid, charUuid, TransferBundle.AttributeType.CCCD, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             return true;
         } else {
             return false;
@@ -228,10 +228,6 @@ public class GattClientService extends Service {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-//            mNrfSpeedDevice.setBleServices(gatt.getServices());
-//            for (BluetoothGattService service : mNrfSpeedDevice.getBleServices()) {
-//                Log.i(TAG, "onServicesDiscovered: " + service.getUuid());
-//            }
             broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
         }
 
@@ -239,21 +235,25 @@ public class GattClientService extends Service {
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
             broadcastUpdate(ACTION_GATT_ON_CHARACTERISTIC_READ, characteristic);
-            mCharacteristicReadWriteQueue.transferNextInQueue();
+            mCharacteristicTransferQueue.transferNextInQueue();
         }
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
             Log.i(TAG, "onCharacteristicWrite: status: " + status);
-            mCharacteristicReadWriteQueue.transferNextInQueue();
+            mCharacteristicTransferQueue.transferNextInQueue();
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            Log.i(TAG, "onCharacteristicChanged: ");
+            if (characteristic.getUuid().equals(NrfSpeedUUIDs.UUID_CHAR_SPAM)) {
+                mTransferredBytes += characteristic.getValue().length;
+                broadcastUpdate(ACTION_GATT_SPAM_CHAR_NOTIFY, characteristic);
+            }
         }
+
 
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
@@ -263,13 +263,12 @@ public class GattClientService extends Service {
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
-            mCharacteristicReadWriteQueue.transferNextInQueue();
+            mCharacteristicTransferQueue.transferNextInQueue();
         }
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
-            mMtu = mtu;
             Log.i(TAG, "onMtuChanged: MTU: " + mtu);
         }
     };
@@ -297,15 +296,13 @@ public class GattClientService extends Service {
         }else if (NrfSpeedUUIDs.UUID_CHAR_SYSTEM_ID.equals(characteristic.getUuid())) {
             intent = new Intent(ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ);
             intent.putExtra(EXTRA_DATA, characteristic.getValue());
-        } else {
+        }else if (NrfSpeedUUIDs.UUID_CHAR_SPAM.equals(characteristic.getUuid())) {
+            intent = new Intent(ACTION_GATT_SPAM_CHAR_NOTIFY);
+            intent.putExtra(EXTRA_DATA, characteristic.getValue());
+        }else {
             intent = new Intent(action);
         }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        Log.i(TAG, "broadcastUpdate: Intent: " + intent.getAction() + ", value: " + characteristic.getValue()[0]);
-    }
-
-    public int getMtu() {
-        return mMtu;
     }
 
     public boolean isConnected() {
@@ -318,5 +315,9 @@ public class GattClientService extends Service {
 
     public BluetoothGatt getGatt() {
         return mGatt;
+    }
+
+    public int getTransferredBytes() {
+        return mTransferredBytes;
     }
 }

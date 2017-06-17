@@ -1,6 +1,5 @@
 package com.example.martin.ptbt;
 
-import android.bluetooth.BluetoothGatt;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -9,21 +8,18 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.renderscript.Double2;
-import android.support.v4.app.NotificationCompatSideChannelService;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
+import java.util.Locale;
 
 /**
  * Created by Martin on 10.05.2017.
@@ -34,7 +30,7 @@ public class SpeedTestActivity extends AppCompatActivity {
     private static final String TAG = "SpeedTestActivity";
     public static final String EXTRA_DEVICE_ADDRESS = "com.example.mabo.myapplication.EXTRA_DEVICE_ADDRESS";
 
-    private TextView txtDeviceFw, txtDeviceHw, txtSystemId;
+    private TextView txtDeviceFw, txtDeviceHw, txtSystemId, txtThroughput;
     private Spinner spnrPhy;
     private Switch swCfgDle, swCfgConnEvtExt;
     private EditText etxtMtu, etxtConnInterval;
@@ -45,6 +41,7 @@ public class SpeedTestActivity extends AppCompatActivity {
     private String bleDeviceAddress;
     boolean mGattClientServiceIsBound = false;
 
+    private int receivedBytes = 0;
 
     public static Intent createLaunchIntent(Context context, String deviceAddress) {
         Intent intentSpeedTestActivity = new Intent(context, SpeedTestActivity.class);
@@ -85,6 +82,7 @@ public class SpeedTestActivity extends AppCompatActivity {
         intentFilter.addAction(GattClientService.ACTION_GATT_DIS_CHAR_MANUF_NAME_READ);
         intentFilter.addAction(GattClientService.ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ);
         intentFilter.addAction(GattClientService.ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ);
+        intentFilter.addAction(GattClientService.ACTION_GATT_SPAM_CHAR_NOTIFY);
         return intentFilter;
     }
 
@@ -93,7 +91,6 @@ public class SpeedTestActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             final byte[] rawBytes = intent.getByteArrayExtra(GattClientService.EXTRA_DATA);
-
             Log.i(TAG, "onReceive: Action: " + action);
             switch (action) {
                 case GattClientService.ACTION_GATT_CONNECTED:
@@ -105,7 +102,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                     break;
                 case GattClientService.ACTION_GATT_SERVICES_DISCOVERED:
                     mGattClientService.readDeviceInformation();
-                    mGattClientService.enableNotification(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_SPAM_CHAR_UUID);
+                    mGattClientService.enableNotification(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.UUID_CHAR_SPAM);
                     break;
                 case GattClientService.ACTION_GATT_ON_CHARACTERISTIC_READ:
                     break;
@@ -154,6 +151,16 @@ public class SpeedTestActivity extends AppCompatActivity {
                         }
                     });
                     break;
+                case GattClientService.ACTION_GATT_SPAM_CHAR_NOTIFY:
+                    receivedBytes += rawBytes.length;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String string = String.format(Locale.ENGLISH, "%d Bytes", receivedBytes);
+                            txtThroughput.setText(string);
+                        }
+                    });
+                    break;
                 default:
                     break;
             }
@@ -192,6 +199,7 @@ public class SpeedTestActivity extends AppCompatActivity {
         txtDeviceFw = (TextView) findViewById(R.id.txtSpeedDeviceFw);
         txtDeviceHw = (TextView) findViewById(R.id.txtSpeedDeviceHw);
         txtSystemId = (TextView) findViewById(R.id.txtSystemId);
+        txtThroughput = (TextView) findViewById(R.id.txtThroughput);
 
         etxtMtu = (EditText) findViewById(R.id.etxtCfgMtu);
         etxtConnInterval = (EditText) findViewById(R.id.etxtCfgConnInterval);

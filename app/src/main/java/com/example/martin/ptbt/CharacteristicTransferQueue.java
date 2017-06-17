@@ -13,14 +13,14 @@ import java.util.UUID;
  * Created by Martin on 17.06.2017.
  */
 
-public class CharacteristicReadWriteQueue {
+public class CharacteristicTransferQueue {
 
     private Queue<TransferBundle> mTransferQueue = new LinkedList<>();
     private boolean mTransferInProgress = false;
 
     private BluetoothGatt mGatt;
 
-    public CharacteristicReadWriteQueue(BluetoothGatt mGatt) {
+    public CharacteristicTransferQueue(BluetoothGatt mGatt) {
         this.mGatt = mGatt;
     }
 

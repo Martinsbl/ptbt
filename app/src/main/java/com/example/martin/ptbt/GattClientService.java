@@ -45,24 +45,29 @@ public class GattClientService extends Service {
 
     private NrfSpeedDevice mNrfSpeedDevice;
 
-    private class ServiceCharacteristicBundle {
-        UUID service;
-        UUID characteristic;
-    }
+//    private class ServiceCharacteristicBundle {
+//        UUID service;
+//        UUID characteristic;
+//    }
+//
+//    private class ServiceCharacteristicWriteBundle {
+//        UUID service;
+//        UUID characteristic;
+//        byte[] value;
+//    }
 
-    private class ServiceCharacteristicWriteBundle {
-        UUID service;
-        UUID characteristic;
-        byte[] value;
-    }
 
-    private Queue<ServiceCharacteristicBundle> mCharReadQueue = new LinkedList<>();
-    private boolean mIsReading = false;
 
-    private Queue<ServiceCharacteristicWriteBundle> mCharWriteQueue = new LinkedList<>();
-    private Queue<ServiceCharacteristicBundle> mCccdWriteQueue = new LinkedList<>();
-    private boolean mIsWritingChar = false;
-    private boolean mIsWritingCccd = false;
+    private Queue<CharacteristicReadWriteOp> mReadWriteQueue = new LinkedList<>();
+    private boolean mIsReadWriting = false;
+
+//    private Queue<ServiceCharacteristicBundle> mCharReadQueue = new LinkedList<>();
+//    private boolean mIsReading = false;
+//
+//    private Queue<ServiceCharacteristicWriteBundle> mCharWriteQueue = new LinkedList<>();
+//    private Queue<ServiceCharacteristicBundle> mCccdWriteQueue = new LinkedList<>();
+//    private boolean mIsWritingChar = false;
+//    private boolean mIsWritingCccd = false;
 
     private String mBleDeviceAddress;
     private BluetoothGatt mGatt = null;
@@ -202,29 +207,21 @@ public class GattClientService extends Service {
 
     public boolean writeCharacteristic(UUID serviceUuid, UUID charUuid, byte[] value) {
         if (mIsConnected) {
-            ServiceCharacteristicWriteBundle bundle = new ServiceCharacteristicWriteBundle();
-            bundle.service = serviceUuid;
-            bundle.characteristic = charUuid;
-            bundle.value = value;
-            mCharWriteQueue.add(bundle);
-            writeNextCharInQueue();
+            CharacteristicReadWriteOp characteristicReadWriteOp = new CharacteristicReadWriteOp(serviceUuid, charUuid, CharacteristicReadWriteOp.AttributeType.CHARACTERISTIC, value);
+            mReadWriteQueue.add(characteristicReadWriteOp);
+            readWriteNextCharInQueue();
             return true;
         } else {
             return false;
         }
-
-
-
     }
 
     public boolean readCharacteristic(UUID serviceUuid, UUID charUuid) {
         if (mIsConnected) {
             try {
-                ServiceCharacteristicBundle uuidBundle = new ServiceCharacteristicBundle();
-                uuidBundle.service = serviceUuid;
-                uuidBundle.characteristic = charUuid;
-                mCharReadQueue.add(uuidBundle);
-                readNextCharInQueue();
+                CharacteristicReadWriteOp characteristicReadWriteOp = new CharacteristicReadWriteOp(serviceUuid, charUuid, CharacteristicReadWriteOp.AttributeType.CHARACTERISTIC);
+                mReadWriteQueue.add(characteristicReadWriteOp);
+                readWriteNextCharInQueue();
                 return true;
             } catch (Exception e) {
                 Log.i(TAG, "readCharacteristic: Exception: " + e);
@@ -238,64 +235,80 @@ public class GattClientService extends Service {
 
     public boolean enableNotification(UUID serviceUuid, UUID charUuid) {
         if (mIsConnected) {
-            ServiceCharacteristicBundle bundle = new ServiceCharacteristicBundle();
-            bundle.service = serviceUuid;
-            bundle.characteristic = charUuid;
-            mCccdWriteQueue.add(bundle);
-            writeNextCccdInQueue();
+            CharacteristicReadWriteOp characteristicReadWriteOp = new CharacteristicReadWriteOp(serviceUuid, charUuid, CharacteristicReadWriteOp.AttributeType.CCCD, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            mReadWriteQueue.add(characteristicReadWriteOp);
+            readWriteNextCharInQueue();
             return true;
         } else {
             return false;
         }
     }
 
-    private void writeNextCccdInQueue() {
-        if (mIsWritingCccd) {
+//    private void writeNextCccdInQueue() {
+//        if (mIsWritingCccd) {
+//            return;
+//        }
+//        if (mCccdWriteQueue.size() == 0) {
+//            return;
+//        }
+//        mIsWritingCccd = true;
+//        ServiceCharacteristicBundle bundle = mCccdWriteQueue.poll();
+//        BluetoothGattService service = mGatt.getService(bundle.service);
+//        BluetoothGattCharacteristic characteristic = service.getCharacteristic(bundle.characteristic);
+//        mGatt.setCharacteristicNotification(characteristic, true);
+//        BluetoothGattDescriptor cccd = characteristic.getDescriptor(NrfSpeedUUIDs.UUID_CCCD);
+//        cccd.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+//        mGatt.writeDescriptor(cccd);
+//        Log.i(TAG, "writeNextCccdInQueue: wrote to CCCD at char: " + characteristic.getUuid());
+//    }
+
+    private void readWriteNextCharInQueue() {
+        if (mIsReadWriting) {
             return;
         }
-        if (mCccdWriteQueue.size() == 0) {
+        if (mReadWriteQueue.size() == 0) {
             return;
         }
-        mIsWritingCccd = true;
-        ServiceCharacteristicBundle bundle = mCccdWriteQueue.poll();
-        BluetoothGattService service = mGatt.getService(bundle.service);
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(bundle.characteristic);
-        mGatt.setCharacteristicNotification(characteristic, true);
-        BluetoothGattDescriptor cccd = characteristic.getDescriptor(NrfSpeedUUIDs.UUID_CCCD);
-        cccd.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        mGatt.writeDescriptor(cccd);
-        Log.i(TAG, "writeNextCccdInQueue: wrote to CCCD at char: " + characteristic.getUuid());
+        mIsReadWriting = true;
+        CharacteristicReadWriteOp characteristicReadWriteOp = mReadWriteQueue.poll();
+        BluetoothGattService service = mGatt.getService(characteristicReadWriteOp.getService());
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicReadWriteOp.getCharacteristic());
+        switch (characteristicReadWriteOp.getOperation()) {
+            case READ:
+                mGatt.readCharacteristic(characteristic);
+                Log.i(TAG, "readWriteNextCharInQueue: READ FROM char: " + characteristic.getUuid());
+                break;
+            case WRITE:
+                if (characteristicReadWriteOp.getAttributeType() == CharacteristicReadWriteOp.AttributeType.CHARACTERISTIC) {
+                    characteristic.setValue(characteristicReadWriteOp.getValue());
+                    mGatt.writeCharacteristic(characteristic);
+                    Log.i(TAG, "readWriteNextCharInQueue: WRITE TO CHARACTERISTIC: " + characteristic.getUuid());
+                } else if (characteristicReadWriteOp.getAttributeType() == CharacteristicReadWriteOp.AttributeType.CCCD) {
+                    mGatt.setCharacteristicNotification(characteristic, true);
+                    BluetoothGattDescriptor cccd = characteristic.getDescriptor(NrfSpeedUUIDs.UUID_CCCD);
+                    cccd.setValue(characteristicReadWriteOp.getValue());
+                    mGatt.writeDescriptor(cccd);
+                    Log.i(TAG, "readWriteNextCharInQueue: WRITE TO CCCD: " + characteristic.getUuid());
+                }
+                break;
+            default:
+                break;
+        }
     }
 
-    private void writeNextCharInQueue() {
-        if (mIsWritingChar) {
-            return;
-        }
-        if (mCharWriteQueue.size() == 0) {
-            return;
-        }
-        mIsWritingChar = true;
-        ServiceCharacteristicWriteBundle bundle = mCharWriteQueue.poll();
-        BluetoothGattService service = mGatt.getService(bundle.service);
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(bundle.characteristic);
-        characteristic.setValue(bundle.value);
-        mGatt.writeCharacteristic(characteristic);
-        Log.i(TAG, "writeNextCharInQueue: wrote to char: " + characteristic.getUuid());
-    }
-
-    private void readNextCharInQueue() {
-        if (mIsReading) {
-            return;
-        }
-        if (mCharReadQueue.size() == 0) {
-            return;
-        }
-        mIsReading = true;
-        ServiceCharacteristicBundle uuidBundle = (ServiceCharacteristicBundle) mCharReadQueue.poll();
-        BluetoothGattService service = mGatt.getService(uuidBundle.service);
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(uuidBundle.characteristic);
-        mGatt.readCharacteristic(characteristic);
-    }
+//    private void readNextCharInQueue() {
+//        if (mIsReading) {
+//            return;
+//        }
+//        if (mCharReadQueue.size() == 0) {
+//            return;
+//        }
+//        mIsReading = true;
+//        ServiceCharacteristicBundle uuidBundle = (ServiceCharacteristicBundle) mCharReadQueue.poll();
+//        BluetoothGattService service = mGatt.getService(uuidBundle.service);
+//        BluetoothGattCharacteristic characteristic = service.getCharacteristic(uuidBundle.characteristic);
+//        mGatt.readCharacteristic(characteristic);
+//    }
 
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         @Override
@@ -325,16 +338,16 @@ public class GattClientService extends Service {
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
             broadcastUpdate(ACTION_GATT_ON_CHARACTERISTIC_READ, characteristic);
-            mIsReading = false;
-            readNextCharInQueue();
+            mIsReadWriting = false;
+            readWriteNextCharInQueue();
         }
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
-            mIsWritingChar = false;
+            mIsReadWriting = false;
             Log.i(TAG, "onCharacteristicWrite: status: " + status);
-            writeNextCharInQueue();
+            readWriteNextCharInQueue();
         }
 
         @Override
@@ -351,8 +364,8 @@ public class GattClientService extends Service {
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
-            mIsWritingCccd = false;
-            writeNextCccdInQueue();
+            mIsReadWriting = false;
+            readWriteNextCharInQueue();
         }
 
         @Override

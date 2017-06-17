@@ -100,6 +100,8 @@ public class SpeedTestActivity extends AppCompatActivity {
                     Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
                     break;
                 case GattClientService.ACTION_GATT_DISCONNECTED:
+                    stopGattClientService();
+                    finish();
                     break;
                 case GattClientService.ACTION_GATT_SERVICES_DISCOVERED:
                     mGattClientService.readDeviceInformation();
@@ -271,7 +273,9 @@ public class SpeedTestActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.btnDisconnect:
-                finish();
+//                stopGattClientService();
+                mGattClientService.getGatt().disconnect();
+//                finish();
                 break;
             default:
                 break;
@@ -280,7 +284,9 @@ public class SpeedTestActivity extends AppCompatActivity {
     }
 
     private void stopGattClientService() {
-        mGattClientService.getGatt().disconnect();
+//        if (mGattClientService.getGatt() != null) {
+//            mGattClientService.getGatt().disconnect();
+//        }
         if (mGattClientServiceIsBound) {
             Log.i(TAG, "stopGattClientService: Unbinding service.");
             unbindService(serviceConnectionCallback);
@@ -301,7 +307,6 @@ public class SpeedTestActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
     }
 
     @Override

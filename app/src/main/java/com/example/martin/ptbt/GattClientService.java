@@ -65,7 +65,7 @@ public class GattClientService extends Service {
     private boolean mIsWritingCccd = false;
 
     private String mBleDeviceAddress;
-    private BluetoothGatt mGatt;
+    private BluetoothGatt mGatt = null;
     private boolean mIsConnected = false;
     private boolean mIsTestRunning = false;
     private int mMtu = 0;
@@ -91,17 +91,17 @@ public class GattClientService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.i(TAG, "onBind: " + intent.toString());
+
         mBleDeviceAddress = intent.getStringExtra(SpeedTestActivity.EXTRA_DEVICE_ADDRESS);
         mNrfSpeedDevice = new NrfSpeedDevice();
         connectToGattServer();
+        Log.i(TAG, "onBind: " + intent.toString());
         return localBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
         Log.i(TAG, "onUnbind: UNBIND");
-        closeGattClient();
         stopSelf();
         return super.onUnbind(intent);
     }
@@ -109,6 +109,7 @@ public class GattClientService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        closeGattClient();
 //        disconnectFromGattServer();
         Log.i(TAG, "onDestroy: Gatt Client Service");
     }
@@ -119,6 +120,7 @@ public class GattClientService extends Service {
         final BluetoothDevice bleDevice = bleAdapter.getRemoteDevice(mBleDeviceAddress);
 
         mGatt = bleDevice.connectGatt(this, false, gattCallback);
+        Log.i(TAG, "connectToGattServer:  connect to " + mBleDeviceAddress);
     }
 
     private void shutDownService() {
@@ -132,6 +134,7 @@ public class GattClientService extends Service {
         }
         mBleDeviceAddress = null;
         mGatt.close();
+        Log.i(TAG, "closeGattClient: MGATT CLOSE");
         mGatt = null;
     }
 
@@ -304,8 +307,9 @@ public class GattClientService extends Service {
                 mIsConnected = true;
                 mGatt.discoverServices();
                 broadcastUpdate(ACTION_GATT_CONNECTED);
+                Log.i(TAG, "onConnectionStateChange: CONNECTED");
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.i(TAG, "onConnectionStateChange: DISONNECTED");
+                Log.i(TAG, "onConnectionStateChange: DISCONNECTED");
                 mIsConnected = false;
                 broadcastUpdate(ACTION_GATT_DISCONNECTED);
 //                shutDownService();

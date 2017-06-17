@@ -273,9 +273,8 @@ public class SpeedTestActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.btnDisconnect:
-//                stopGattClientService();
-                mGattClientService.getGatt().disconnect();
-//                finish();
+                stopGattClientService();
+                finish();
                 break;
             default:
                 break;
@@ -283,18 +282,21 @@ public class SpeedTestActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * This will unbind and close the Gatt Client Service. BLE will be
+     * closed on service's onDestroy().
+     */
     private void stopGattClientService() {
-//        if (mGattClientService.getGatt() != null) {
-//            mGattClientService.getGatt().disconnect();
-//        }
+        // Disconnect BLE and close service if service is active.
         if (mGattClientServiceIsBound) {
-            Log.i(TAG, "stopGattClientService: Unbinding service.");
+            if (mGattClientService.isConnected()) {
+                mGattClientService.getGatt().disconnect();
+            }
             unbindService(serviceConnectionCallback);
             mGattClientServiceIsBound = false;
+            stopService(intentGattClientService);
         }
-        if (stopService(intentGattClientService)) {
-            Log.i(TAG, "stopGattClientService: Service stopped.");
-        }
+        // Close Broadcast Receiver
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
         } catch (Exception ignore) {

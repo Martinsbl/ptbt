@@ -212,6 +212,9 @@ public class GattClientService extends Service {
         } else {
             return false;
         }
+
+
+
     }
 
     public boolean readCharacteristic(UUID serviceUuid, UUID charUuid) {
@@ -239,7 +242,7 @@ public class GattClientService extends Service {
             bundle.service = serviceUuid;
             bundle.characteristic = charUuid;
             mCccdWriteQueue.add(bundle);
-            writeNextCharInQueue();
+            writeNextCccdInQueue();
             return true;
         } else {
             return false;
@@ -254,9 +257,10 @@ public class GattClientService extends Service {
             return;
         }
         mIsWritingCccd = true;
-        ServiceCharacteristicWriteBundle bundle = mCharWriteQueue.poll();
+        ServiceCharacteristicBundle bundle = mCccdWriteQueue.poll();
         BluetoothGattService service = mGatt.getService(bundle.service);
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(bundle.characteristic);
+        mGatt.setCharacteristicNotification(characteristic, true);
         BluetoothGattDescriptor cccd = characteristic.getDescriptor(NrfSpeedUUIDs.UUID_CCCD);
         cccd.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
         mGatt.writeDescriptor(cccd);
@@ -336,6 +340,7 @@ public class GattClientService extends Service {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
+            Log.i(TAG, "onCharacteristicChanged: ");
         }
 
         @Override

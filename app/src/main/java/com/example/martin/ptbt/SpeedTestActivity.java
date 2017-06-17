@@ -104,7 +104,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                     finish();
                     break;
                 case GattClientService.ACTION_GATT_SERVICES_DISCOVERED:
-                    mGattClientService.readDeviceInformation();
+//                    mGattClientService.readDeviceInformation();
                     mGattClientService.enableNotification(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_SPAM_CHAR_UUID);
                     break;
                 case GattClientService.ACTION_GATT_ON_CHARACTERISTIC_READ:
@@ -250,6 +250,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                 break;
             case R.id.btnEnableDle:
                 enableDle();
+//                mGattClientService.enableNotification(NrfSpeedUUIDs.SPEED_SERVICE_UUID, NrfSpeedUUIDs.SPEED_SPAM_CHAR_UUID);
                 break;
             case R.id.btnUpdateMtu:
                 updateMtu();

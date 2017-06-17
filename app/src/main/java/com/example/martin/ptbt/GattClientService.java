@@ -99,21 +99,6 @@ public class GattClientService extends Service {
         return localBinder;
     }
 
-    @Override
-    public boolean onUnbind(Intent intent) {
-        Log.i(TAG, "onUnbind: UNBIND");
-        stopSelf();
-        return super.onUnbind(intent);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        closeGattClient();
-//        disconnectFromGattServer();
-        Log.i(TAG, "onDestroy: Gatt Client Service");
-    }
-
     private void connectToGattServer() {
         final BluetoothManager bleManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         final BluetoothAdapter bleAdapter = bleManager.getAdapter();
@@ -123,10 +108,19 @@ public class GattClientService extends Service {
         Log.i(TAG, "connectToGattServer:  connect to " + mBleDeviceAddress);
     }
 
-    private void shutDownService() {
-        closeGattClient();
+    @Override
+    public boolean onUnbind(Intent intent) {
+        // TODO: is stopself() necessary?
         stopSelf();
+        return super.onUnbind(intent);
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        closeGattClient();
+    }
+
 
     private void closeGattClient() {
         if (mGatt == null) {
@@ -134,7 +128,6 @@ public class GattClientService extends Service {
         }
         mBleDeviceAddress = null;
         mGatt.close();
-        Log.i(TAG, "closeGattClient: MGATT CLOSE");
         mGatt = null;
     }
 
@@ -312,7 +305,6 @@ public class GattClientService extends Service {
                 Log.i(TAG, "onConnectionStateChange: DISCONNECTED");
                 mIsConnected = false;
                 broadcastUpdate(ACTION_GATT_DISCONNECTED);
-//                shutDownService();
             }
         }
 

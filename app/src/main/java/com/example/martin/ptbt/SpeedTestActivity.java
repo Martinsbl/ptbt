@@ -83,6 +83,7 @@ public class SpeedTestActivity extends AppCompatActivity {
         intentFilter.addAction(GattClientService.ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ);
         intentFilter.addAction(GattClientService.ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ);
         intentFilter.addAction(GattClientService.ACTION_GATT_SPAM_CHAR_NOTIFY);
+        intentFilter.addAction(GattClientService.ACTION_GATT_SPAM_END_TEST);
         return intentFilter;
     }
 
@@ -91,7 +92,7 @@ public class SpeedTestActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             final byte[] rawBytes = intent.getByteArrayExtra(GattClientService.EXTRA_DATA);
-            Log.i(TAG, "onReceive: Action: " + action);
+//            Log.i(TAG, "onReceive: Action: " + action);
             switch (action) {
                 case GattClientService.ACTION_GATT_CONNECTED:
                     Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
@@ -152,6 +153,17 @@ public class SpeedTestActivity extends AppCompatActivity {
                     });
                     break;
                 case GattClientService.ACTION_GATT_SPAM_CHAR_NOTIFY:
+                    receivedBytes += rawBytes.length;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String string = String.format(Locale.ENGLISH, "%d Bytes", receivedBytes);
+                            txtThroughput.setText(string);
+                        }
+                    });
+                    break;
+                case GattClientService.ACTION_GATT_SPAM_END_TEST:
+                    // TODO Stop timer
                     receivedBytes += rawBytes.length;
                     runOnUiThread(new Runnable() {
                         @Override
@@ -277,6 +289,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                 break;
             case R.id.btnStartTest:
                 if (!mGattClientService.isTestRunning()) {
+                    // TODO Start timer
                     mGattClientService.startSpeedTest(true);
                 }
                 break;

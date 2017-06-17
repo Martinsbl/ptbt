@@ -230,6 +230,17 @@
 
     </LinearLayout>
 
+
+    <TextView
+        android:id="@+id/txtThroughput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="30sp"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
+        android:gravity="center"
+        tools:text="1000kBps"/>
+
     <Button
         android:id="@+id/btnStartTest"
         android:layout_width="match_parent"

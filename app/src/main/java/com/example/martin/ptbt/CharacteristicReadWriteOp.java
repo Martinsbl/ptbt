@@ -1,5 +1,7 @@
 package com.example.martin.ptbt;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.UUID;
 
 /**
@@ -18,6 +20,9 @@ public class CharacteristicReadWriteOp {
         CCCD
     }
 
+    // TODO Make static queue and awesomeness!
+//    static Queue<> transferQueue = new LinkedList();
+
 
     private UUID service;
     private UUID characteristic;
@@ -27,6 +32,7 @@ public class CharacteristicReadWriteOp {
 
     /**
      * Constructor for WRITE operations
+     *
      * @param service
      * @param characteristic
      * @param value
@@ -42,6 +48,7 @@ public class CharacteristicReadWriteOp {
 
     /**
      * Constructor for READ operations.
+     *
      * @param service
      * @param characteristic
      * @param attributeType

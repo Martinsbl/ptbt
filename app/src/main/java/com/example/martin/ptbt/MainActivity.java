@@ -192,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 if (!deviceAdapter.hasDevice(result)) {
                     deviceAdapter.addDevice(result);
                     deviceAdapter.notifyDataSetChanged();
+                    lazyAutoConnect(); // Auto connect to first discovered device
                 }
             }
         }
@@ -202,6 +203,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             Log.i(TAG, "Scan error");
         }
     };
+
+
+    public void lazyAutoConnect() {
+        BluetoothDevice bleDevice = deviceAdapter.getItem(0).getDevice();
+        startActivity(SpeedTestActivity.createLaunchIntent(this, bleDevice.getAddress()));
+        stopLeScan();
+        deviceAdapter.clear();
+        deviceAdapter.notifyDataSetChanged();
+    }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

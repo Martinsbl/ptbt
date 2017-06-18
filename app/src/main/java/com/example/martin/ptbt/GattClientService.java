@@ -36,10 +36,10 @@ public class GattClientService extends Service {
     public static final String ACTION_GATT_DIS_CHAR_MANUF_NAME_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_MANUF_NAME_READ";
     public static final String ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ";
     public static final String ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ = "com.example.mabo.myapplication.ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ";
+    public static final String ACTION_GATT_SPAM_CHAR_START_TEST = "com.example.mabo.myapplication.ACTION_GATT_SPAM_CHAR_START_TEST";
+    public static final String ACTION_GATT_SPAM_CHAR_END_TEST = "com.example.mabo.myapplication.ACTION_GATT_SPAM_CHAR_END_TEST";
     public static final String ACTION_GATT_SPAM_CHAR_NOTIFY = "com.example.mabo.myapplication.ACTION_GATT_SPAM_CHAR_NOTIFY";
-    public static final String ACTION_GATT_SPAM_END_TEST = "com.example.mabo.myapplication.ACTION_GATT_SPAM_END_TEST";
     public static final String EXTRA_DATA = "com.example.mabo.myapplication.EXTRA_DATA";
-    public static final String EXTRA_DATA_INTEGER = "com.example.mabo.myapplication.EXTRA_DATA_INTEGER";
 
     private final IBinder localBinder = new LocalBinder();
 
@@ -298,12 +298,17 @@ public class GattClientService extends Service {
             intent = new Intent(ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ);
             intent.putExtra(EXTRA_DATA, characteristic.getValue());
         }else if (NrfSpeedUUIDs.UUID_CHAR_SPAM.equals(characteristic.getUuid())) {
-            intent = new Intent(ACTION_GATT_SPAM_CHAR_NOTIFY);
-            intent.putExtra(EXTRA_DATA, characteristic.getValue());
-            if (characteristic.getValue()[5] == 2) {
+            if (characteristic.getValue()[5] == 1) {
+                Log.i(TAG, "broadcastUpdate: START TEST!");
+                intent = new Intent(ACTION_GATT_SPAM_CHAR_START_TEST);
+                intent.putExtra(EXTRA_DATA, characteristic.getValue());
+            } else if (characteristic.getValue()[5] == 3) {
                 Log.i(TAG, "broadcastUpdate: END TEST!");
-            } else if (characteristic.getValue()[5] == 1) {
-                Log.i(TAG, "broadcastUpdate: normal value");
+                intent = new Intent(ACTION_GATT_SPAM_CHAR_END_TEST);
+                intent.putExtra(EXTRA_DATA, characteristic.getValue());
+            }else {
+                intent = new Intent(ACTION_GATT_SPAM_CHAR_NOTIFY);
+                intent.putExtra(EXTRA_DATA, characteristic.getValue());
             }
         }else {
             intent = new Intent(action);

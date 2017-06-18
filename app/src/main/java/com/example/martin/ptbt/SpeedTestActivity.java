@@ -8,13 +8,12 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.Spinner;
+import android.widget.RadioButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,16 +29,18 @@ public class SpeedTestActivity extends AppCompatActivity {
     private static final String TAG = "SpeedTestActivity";
     public static final String EXTRA_DEVICE_ADDRESS = "com.example.mabo.myapplication.EXTRA_DEVICE_ADDRESS";
 
-    private TextView txtDeviceFw, txtDeviceHw, txtSystemId, txtThroughput;
-    private Spinner spnrPhy;
+    private TextView txtDeviceFw, txtDeviceHw, txtThroughput;
     private Switch swCfgDle, swCfgConnEvtExt;
-    private EditText etxtMtu, etxtConnInterval;
-
 
     Intent intentGattClientService;
     private GattClientService mGattClientService;
     private String bleDeviceAddress;
     boolean mGattClientServiceIsBound = false;
+
+    private boolean testInProgress = false;
+    private long testProgressTime;
+    private long testStartTime;
+    private long testTimeSinceLastNotification;
 
     private int receivedBytes = 0;
 
@@ -83,7 +84,8 @@ public class SpeedTestActivity extends AppCompatActivity {
         intentFilter.addAction(GattClientService.ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ);
         intentFilter.addAction(GattClientService.ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ);
         intentFilter.addAction(GattClientService.ACTION_GATT_SPAM_CHAR_NOTIFY);
-        intentFilter.addAction(GattClientService.ACTION_GATT_SPAM_END_TEST);
+        intentFilter.addAction(GattClientService.ACTION_GATT_SPAM_CHAR_START_TEST);
+        intentFilter.addAction(GattClientService.ACTION_GATT_SPAM_CHAR_END_TEST);
         return intentFilter;
     }
 
@@ -92,7 +94,6 @@ public class SpeedTestActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             final byte[] rawBytes = intent.getByteArrayExtra(GattClientService.EXTRA_DATA);
-//            Log.i(TAG, "onReceive: Action: " + action);
             switch (action) {
                 case GattClientService.ACTION_GATT_CONNECTED:
                     Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
@@ -107,7 +108,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                     break;
                 case GattClientService.ACTION_GATT_ON_CHARACTERISTIC_READ:
                     break;
-                case GattClientService.ACTION_GATT_DIS_CHAR_FW_READ:
+                case GattClientService.ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ: // FW ID characteristic not yet implemented in Fw ACTION_GATT_DIS_CHAR_FW_READ:
                     final String firmware = "Firmware: " + byteArrayToString(rawBytes);
                     runOnUiThread(new Runnable() {
                         @Override
@@ -116,8 +117,8 @@ public class SpeedTestActivity extends AppCompatActivity {
                         }
                     });
                     break;
-                case GattClientService.ACTION_GATT_DIS_CHAR_HW_READ:
-                    final String hardware = "Firmware: " + byteArrayToString(rawBytes);
+                case GattClientService.ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ: // HW ID characteristic not yet implemented in Fw ACTION_GATT_DIS_CHAR_HW_READ:
+                    final String hardware = "Sys ID: " + byteArrayToString(rawBytes);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -125,53 +126,52 @@ public class SpeedTestActivity extends AppCompatActivity {
                         }
                     });
                     break;
-                case GattClientService.ACTION_GATT_DIS_CHAR_MANUF_NAME_READ:
-                    final String manufacturerName = "Manuf name: " + byteArrayToString(rawBytes);
+                case GattClientService.ACTION_GATT_SPAM_CHAR_START_TEST:
+                    // TODO Start timer
+                    testInProgress = true;
+                    testStartTime = SystemClock.uptimeMillis();
+                    testTimeSinceLastNotification = 0;
+                    receivedBytes += rawBytes.length;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            txtDeviceHw.setText(manufacturerName);
-                        }
-                    });
-                    break;
-                case GattClientService.ACTION_GATT_DIS_CHAR_MODEL_NUMBER_READ:
-                    final String modelNumber = "Model number: " + byteArrayToString(rawBytes);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            txtDeviceFw.setText(modelNumber);
-                        }
-                    });
-                    break;
-                case GattClientService.ACTION_GATT_DIS_CHAR_SYSTEM_ID_READ:
-                    final String sysId = "System ID: " + byteArrayToString(rawBytes);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            txtSystemId.setText(sysId);
+                            String string = String.format(Locale.ENGLISH, "%d Bytes", receivedBytes);
+                            txtThroughput.setText(string);
                         }
                     });
                     break;
                 case GattClientService.ACTION_GATT_SPAM_CHAR_NOTIFY:
+                    // Test in progress
+                    long lastNotificationTime = testProgressTime;
+                    testProgressTime += SystemClock.uptimeMillis() - testStartTime;
+                    testTimeSinceLastNotification = testProgressTime - lastNotificationTime;
                     receivedBytes += rawBytes.length;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            String string = String.format(Locale.ENGLISH, "%d Bytes", receivedBytes);
+                            String string = String.format(Locale.ENGLISH, "%d Bytes Time: %s", receivedBytes, testProgressTime);
                             txtThroughput.setText(string);
                         }
                     });
                     break;
-                case GattClientService.ACTION_GATT_SPAM_END_TEST:
+                case GattClientService.ACTION_GATT_SPAM_CHAR_END_TEST:
                     // TODO Stop timer
+                    testProgressTime = SystemClock.uptimeMillis() - testStartTime;
                     receivedBytes += rawBytes.length;
+                    final float kbps = 8 * (float) receivedBytes / (float) testProgressTime;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            String string = String.format(Locale.ENGLISH, "%d Bytes", receivedBytes);
+                            String string = String.format(Locale.ENGLISH, "%d Bytes, Time: %s ms, TP: %.01f kbps", receivedBytes, testProgressTime, kbps);
                             txtThroughput.setText(string);
                         }
                     });
+                    // Reset and prepare for next test
+                    testInProgress = false;
+                    receivedBytes = 0;
+                    testProgressTime = 0;
+                    testTimeSinceLastNotification = 0;
+                    testStartTime = 0;
                     break;
                 default:
                     break;
@@ -206,91 +206,21 @@ public class SpeedTestActivity extends AppCompatActivity {
     };
 
     private void createGui() {
-        TextView bleSpeedDeviceAddress = (TextView) findViewById(R.id.txtSpeedDeviceAddress);
-        bleSpeedDeviceAddress.setText(bleDeviceAddress);
         txtDeviceFw = (TextView) findViewById(R.id.txtSpeedDeviceFw);
         txtDeviceHw = (TextView) findViewById(R.id.txtSpeedDeviceHw);
-        txtSystemId = (TextView) findViewById(R.id.txtSystemId);
         txtThroughput = (TextView) findViewById(R.id.txtThroughput);
 
-        etxtMtu = (EditText) findViewById(R.id.etxtCfgMtu);
-        etxtConnInterval = (EditText) findViewById(R.id.etxtCfgConnInterval);
-        spnrPhy = (Spinner) findViewById(R.id.spnrCfgPhy);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.phy_array, android.R.layout.simple_spinner_dropdown_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spnrPhy.setAdapter(adapter);
         swCfgConnEvtExt = (Switch) findViewById(R.id.swCfgConnLenExt);
         swCfgDle = (Switch) findViewById(R.id.swCfgDle);
     }
 
-    public void updatePhy() {
-        if (spnrPhy.getSelectedItem().toString().equals("1 Mbps")) {
-            mGattClientService.updatePhy(NrfSpeedDevice.BLE_GAP_PHY_1MBPS);
-        } else if (spnrPhy.getSelectedItem().toString().equals("2 Mbps")) {
-            mGattClientService.updatePhy(NrfSpeedDevice.BLE_GAP_PHY_2MBPS);
-        } else if (spnrPhy.getSelectedItem().toString().equals("Coded")) {
-            mGattClientService.updatePhy(NrfSpeedDevice.BLE_GAP_PHY_CODED);
-        } else {
-            Log.i(TAG, "onButtonSpeedTestActivityClick: Something went wrong when selecting PHY.");
-        }
-    }
-
-    public void enableDle() {
-        if (swCfgDle.isChecked()) {
-            mGattClientService.enableDataLengthExtension(true);
-        } else {
-            mGattClientService.enableDataLengthExtension(false);
-        }
-    }
-
-    public void updateMtu() {
-        int mtu = Integer.parseInt(etxtMtu.getText().toString());
-        mGattClientService.updateMtu(mtu);
-    }
-
-    public void updateConnectionInterval() {
-        double connIntervalDouble = Double.parseDouble(etxtConnInterval.getText().toString());
-        int connInterval = (int) (connIntervalDouble / 1.25);
-        Log.i(TAG, "updateConnectionInterval: Double: " + etxtConnInterval.getText().toString() + ". int: " + connInterval);
-        mGattClientService.updateConnInterval(connInterval);
-    }
-
-    public void enableConnEvtLenghtExtension() {
-        if (swCfgConnEvtExt.isChecked()) {
-            mGattClientService.enableConnEvtLengthExtension(true);
-        } else {
-            mGattClientService.enableConnEvtLengthExtension(false);
-        }
-    }
-
     public void onButtonSpeedTestActivityClick(View view) {
         switch (view.getId()) {
-            case R.id.btnUpdatePhy:
-                updatePhy();
-                break;
-            case R.id.btnEnableDle:
-                enableDle();
-                break;
-            case R.id.btnUpdateMtu:
-                updateMtu();
-                break;
-            case R.id.btnUpdateConnInterval:
-                updateConnectionInterval();
-                break;
-            case R.id.btnEnableConnEvtLengthExtension:
-                enableConnEvtLenghtExtension();
-                break;
-            case R.id.btnUpdateAllParameters:
-                updateMtu();
-                updatePhy();
-                enableConnEvtLenghtExtension();
-                enableDle();
-                updateConnectionInterval();
-                break;
             case R.id.btnStartTest:
-                if (!mGattClientService.isTestRunning()) {
-                    // TODO Start timer
+                if (!testInProgress) {
                     mGattClientService.startSpeedTest(true);
+                } else {
+                    // TODO Implement stop test function
                 }
                 break;
             case R.id.btnDisconnect:
@@ -300,6 +230,89 @@ public class SpeedTestActivity extends AppCompatActivity {
             default:
                 break;
 
+        }
+    }
+
+    public void onRadioMtuClick(View view) {
+        boolean checked = ((RadioButton) view).isChecked();
+        switch (view.getId()) {
+            case R.id.radioMtu23:
+                if (checked) {
+                    mGattClientService.updateMtu(23);
+                }
+                break;
+            case R.id.radioMtu128:
+                if (checked) {
+                    mGattClientService.updateMtu(128);
+                }
+                break;
+            case R.id.radioMtu247:
+                if (checked) {
+                    mGattClientService.updateMtu(247);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    public void onRadioCiClick(View view) {
+        boolean checked = ((RadioButton) view).isChecked();
+        switch (view.getId()) {
+            case R.id.radioCiHigh:
+                if (checked) {
+                    mGattClientService.updateConnInterval(8);
+                }
+                break;
+            case R.id.radioCiMedium:
+                if (checked) {
+                    mGattClientService.updateConnInterval(24); // 24 = 30ms
+                }
+                break;
+            case R.id.radioCi400:
+                if (checked) {
+                    mGattClientService.updateConnInterval(320);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void onRadioPhyClick(View view) {
+        boolean checked = ((RadioButton) view).isChecked();
+        switch (view.getId()) {
+            case R.id.radioPhy1Mbps:
+                if (checked) {
+                    mGattClientService.updatePhy(NrfSpeedDevice.BLE_GAP_PHY_1MBPS);
+                }
+                break;
+            case R.id.radioPhy2Mbps:
+                if (checked) {
+                    mGattClientService.updatePhy(NrfSpeedDevice.BLE_GAP_PHY_2MBPS);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void onSwitchCleClick(View view) {
+        boolean checked = ((Switch) view).isChecked();
+        if (checked) {
+            mGattClientService.enableConnEvtLengthExtension(true);
+        } else {
+            mGattClientService.enableConnEvtLengthExtension(false);
+        }
+    }
+
+    public void onSwitchDleClick(View view) {
+        boolean checked = ((Switch) view).isChecked();
+        if (checked) {
+            mGattClientService.enableDataLengthExtension(true);
+        } else {
+            mGattClientService.enableDataLengthExtension(false);
         }
     }
 

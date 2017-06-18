@@ -7,14 +7,6 @@
     android:descendantFocusability="beforeDescendants"
     android:focusableInTouchMode="true">
 
-
-
-            <TextView
-                android:id="@+id/txtSpeedDeviceAddress"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:text="Test"/>
-
             <TextView
                 android:id="@+id/txtSpeedDeviceFw"
                 android:layout_width="wrap_content"
@@ -26,13 +18,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 tools:text="nRF52"/>
-
-
-            <TextView
-                android:id="@+id/txtSystemId"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:text="123"/>
 
 
     <LinearLayout
@@ -56,19 +41,38 @@
                     android:id="@+id/txtCfgMtu"
                     android:layout_width="@dimen/cfg_list_txt_with_layout_large"
                     android:layout_height="wrap_content"
-                    android:text="MTU:"
+                    android:text="MTU [bytes]:"
                     android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
 
-                <EditText
-                    android:id="@+id/etxtCfgMtu"
-                    android:layout_width="50dp"
+                <RadioGroup
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:digits="0123456789"
-                    android:inputType="number"
-                    android:imeOptions="actionDone"
-                    android:text="@string/default_mtu"
-                    android:maxLines="1"
-                    android:nextFocusForward="@+id/etxtCfgConnInterval"  />
+                    android:orientation="horizontal"
+                    android:layout_gravity="center_vertical">
+
+
+                    <RadioButton
+                        android:id="@+id/radioMtu23"
+                        android:layout_width="@dimen/radio_buttons_width_layout_large"
+                        android:layout_height="wrap_content"
+                        android:text="23"
+                        android:onClick="onRadioMtuClick"/>
+
+                    <RadioButton
+                        android:id="@+id/radioMtu128"
+                        android:layout_width="@dimen/radio_buttons_width_layout_large"
+                        android:layout_height="wrap_content"
+                        android:text="128"
+                        android:onClick="onRadioMtuClick"/>
+
+                    <RadioButton
+                        android:id="@+id/radioMtu"
+                        android:layout_width="@dimen/radio_buttons_width_layout_large"
+                        android:layout_height="wrap_content"
+                        android:text="247"
+                        android:onClick="onRadioMtuClick"/>
+
+                </RadioGroup>
 
             </LinearLayout>
 
@@ -85,15 +89,34 @@
                     android:text="Conn Interval [ms]:"
                     android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
 
-                <EditText
-                    android:id="@+id/etxtCfgConnInterval"
-                    android:layout_width="50dp"
+                <RadioGroup
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:digits="0123456789."
-                    android:inputType="numberDecimal"
-                    android:imeOptions="actionDone"
-                    android:text="@string/default_ci"
-                    android:maxLines="1"/>
+                    android:orientation="horizontal"
+                    android:layout_gravity="center_vertical">
+
+                    <RadioButton
+                        android:id="@+id/radioCiHigh"
+                        android:layout_width="@dimen/radio_buttons_width_layout_large"
+                        android:layout_height="wrap_content"
+                        android:text="@string/conn_interval_high"
+                        android:onClick="onRadioCiClick"/>
+
+                    <RadioButton
+                        android:id="@+id/radioCiMedium"
+                        android:layout_width="@dimen/radio_buttons_width_layout_large"
+                        android:layout_height="wrap_content"
+                        android:onClick="onRadioCiClick"
+                        android:text="@string/conn_interval_medium" />
+
+                    <RadioButton
+                        android:id="@+id/radioCi400"
+                        android:layout_width="@dimen/radio_buttons_width_layout_large"
+                        android:layout_height="wrap_content"
+                        android:text="400"
+                        android:onClick="onRadioCiClick"/>
+
+                </RadioGroup>
 
             </LinearLayout>
 
@@ -113,7 +136,9 @@
                 <Switch
                     android:id="@+id/swCfgDle"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:onClick="onSwitchDleClick"
+                    android:layout_gravity="center_vertical"/>
 
             </LinearLayout>
 
@@ -133,7 +158,9 @@
                 <Switch
                     android:id="@+id/swCfgConnLenExt"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:onClick="onSwitchCleClick"
+                    android:layout_gravity="center_vertical"/>
 
             </LinearLayout>
 
@@ -150,11 +177,28 @@
                     android:text="Phy:"
                     android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
 
-                <Spinner
-                    android:id="@+id/spnrCfgPhy"
+                <RadioGroup
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    tools:text="1 Mbps"/>
+                    android:orientation="horizontal"
+                    android:layout_gravity="center_vertical">
+
+                    <RadioButton
+                        android:id="@+id/radioPhy1Mbps"
+                        android:layout_width="@dimen/radio_buttons_phy_width_layout_large"
+                        android:layout_height="wrap_content"
+                        android:text="1 Mbps"
+                        android:onClick="onRadioPhyClick"/>
+
+                    <RadioButton
+                        android:id="@+id/radioPhy2Mbps"
+                        android:layout_width="@dimen/radio_buttons_phy_width_layout_large"
+                        android:layout_height="wrap_content"
+                        android:text="2 Mbps"
+                        android:onClick="onRadioPhyClick"/>
+
+
+                </RadioGroup>
 
             </LinearLayout>
 
@@ -162,80 +206,11 @@
 
     </LinearLayout>
 
-
-
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <Button
-                android:id="@+id/btnUpdatePhy"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height_layout_large"
-                android:text="@string/btn_cfg_set_phy"
-                android:onClick="onButtonSpeedTestActivityClick"/>
-
-            <Button
-                android:id="@+id/btnUpdateConnInterval"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height_layout_large"
-                android:text="@string/btn_cfg_set_conn_interval"
-                android:onClick="onButtonSpeedTestActivityClick"/>
-
-            <Button
-                android:id="@+id/btnUpdateAllParameters"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height_layout_large"
-                android:text="@string/btn_cfg_set_all"
-                android:onClick="onButtonSpeedTestActivityClick"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <Button
-                android:id="@+id/btnUpdateMtu"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height_layout_large"
-                android:text="@string/btn_cfg_set_mtu"
-                android:onClick="onButtonSpeedTestActivityClick"/>
-
-            <Button
-                android:id="@+id/btnEnableDle"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height_layout_large"
-                android:onClick="onButtonSpeedTestActivityClick"
-                android:text="@string/btn_cfg_set_dle" />
-
-            <Button
-                android:id="@+id/btnEnableConnEvtLengthExtension"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height_layout_large"
-                android:onClick="onButtonSpeedTestActivityClick"
-                android:text="@string/btn_cfg_set_conn_evt_length_extension" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-
     <TextView
         android:id="@+id/txtThroughput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="30sp"
+        android:textSize="@dimen/txt_size_throughput_layout_large"
         android:paddingTop="15dp"
         android:paddingBottom="15dp"
         android:gravity="center"

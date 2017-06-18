@@ -11,6 +11,8 @@
     <string name="btn_disconnect">Disconnect</string>
     <string name="default_mtu">23</string>
     <string name="default_ci">50</string>
+    <string name="conn_interval_medium">30</string>
+    <string name="conn_interval_high">10</string>
 
 
 </resources>

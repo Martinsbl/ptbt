@@ -50,8 +50,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
+//        setSupportActionBar(toolbar);
 
         mScannerHandler = new Handler();
 

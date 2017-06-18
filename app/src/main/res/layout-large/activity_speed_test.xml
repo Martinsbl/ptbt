@@ -1,23 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:descendantFocusability="beforeDescendants"
-    android:focusableInTouchMode="true">
+    android:focusableInTouchMode="true"
+    android:background="@color/nordicBackground">
 
-            <TextView
-                android:id="@+id/txtSpeedDeviceFw"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:text="4654"/>
 
-            <TextView
-                android:id="@+id/txtSpeedDeviceHw"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:text="nRF52"/>
+    <TextView
+        android:id="@+id/txtSpeedDeviceFw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="4654"/>
+
+    <TextView
+        android:id="@+id/txtSpeedDeviceHw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="nRF52"/>
 
 
     <LinearLayout
@@ -49,7 +52,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:layout_gravity="center_vertical">
-
 
                     <RadioButton
                         android:id="@+id/radioMtu23"

@@ -12,7 +12,7 @@
 
     <!--Font sizes-->
     <dimen name="txt_size_cfg_list_layout_large">30sp</dimen>
-    <dimen name="txt_size_cfg_list">15sp</dimen>
+    <dimen name="txt_size_cfg_list">20sp</dimen>
     <dimen name="txt_size_throughput_layout_large">40sp</dimen>
     <dimen name="txt_size_throughput">15sp</dimen>
 

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:descendantFocusability="beforeDescendants"
-    android:focusableInTouchMode="true">
+    android:focusableInTouchMode="true"
+    android:background="@color/nordicBackground">
 
             <TextView
                 android:id="@+id/txtSpeedDeviceFw"
@@ -45,10 +47,10 @@
                     android:textSize="@dimen/txt_size_cfg_list" />
 
                 <RadioGroup
-                    android:id="@+id/radioGroupMtu"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:layout_gravity="center_vertical">
 
                     <RadioButton
                         android:id="@+id/radioMtu23"
@@ -85,13 +87,14 @@
                     android:id="@+id/txtCfgConnInterval"
                     android:layout_width="@dimen/cfg_list_txt_with"
                     android:layout_height="wrap_content"
-                    android:text="Conn Interval [ms]:"
+                    android:text="Conn Int [ms]:"
                     android:textSize="@dimen/txt_size_cfg_list" />
 
                 <RadioGroup
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:layout_gravity="center_vertical">
 
                     <RadioButton
                         android:id="@+id/radioCiHigh"
@@ -105,7 +108,7 @@
                         android:layout_width="@dimen/radio_buttons_width"
                         android:layout_height="wrap_content"
                         android:onClick="onRadioCiClick"
-                        android:text="@string/conn_interval_medium" />
+                        android:text="@string/conn_interval_medium"/>
 
                     <RadioButton
                         android:id="@+id/radioCi400"
@@ -149,7 +152,7 @@
                     android:id="@+id/txtCfgConnLenExt"
                     android:layout_width="@dimen/cfg_list_txt_with"
                     android:layout_height="wrap_content"
-                    android:text="Conn. Evt. Extension:"
+                    android:text="Event Ext:"
                     android:textSize="@dimen/txt_size_cfg_list" />
 
                 <Switch
@@ -176,7 +179,8 @@
                 <RadioGroup
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:layout_gravity="center_vertical">
 
                     <RadioButton
                         android:id="@+id/radioPhy1Mbps"

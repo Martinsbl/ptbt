@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -45,14 +46,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Handler mScannerHandler;
     private boolean mIsScanning = false;
     private Button btnScan;
+    private TextView txtScan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
-//        setSupportActionBar(toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
+        toolbar.setTitle("");
+        setSupportActionBar(toolbar);
 
         mScannerHandler = new Handler();
 
@@ -71,6 +74,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         deviceList.setOnItemClickListener(this);
 
         btnScan = (Button) findViewById(R.id.btnScan);
+        txtScan = (TextView) findViewById(R.id.txtScan);
+        txtScan.setText("Scan");
     }
 
 
@@ -160,6 +165,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         deviceAdapter.clear();
         deviceAdapter.notifyDataSetChanged();
         btnScan.setText("Stop scan");
+        txtScan.setText("Stop scan");
         mIsScanning = true;
     }
 
@@ -169,6 +175,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mIsScanning = false;
         mScanner.stopScan(scanCallback);
         btnScan.setText("Scan");
+        txtScan.setText("Scan");
     }
 
     private Runnable mStopScanningTask = new Runnable() {
@@ -239,27 +246,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+    public void onScanTextClick(View view) {
+        if (!mIsScanning) {
+            txtScan.setText("Stop scan");
+            startLeScan();
+        } else {
+            txtScan.setText("Scan");
+            stopLeScan();
         }
-
-        return super.onOptionsItemSelected(item);
     }
+
 
     @Override
     protected void onStop() {

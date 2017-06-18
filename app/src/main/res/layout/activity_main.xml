@@ -8,19 +8,9 @@
     android:background="@color/nordicBackground"
     android:orientation="vertical">
 
-    <android.support.design.widget.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/headerBackgroundColor"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
-
-    </android.support.design.widget.AppBarLayout>
+    <include
+        android:id="@+id/tool_bar"
+        layout="@layout/tool_bar"/>
 
 
     <ListView
@@ -35,13 +25,5 @@
         android:layout_height="100dp"
         android:text="Scan"
         android:onClick="onButtonsClick"/>
-
-
-    <!--<ImageView-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:src="@drawable/background_title"-->
-        <!--android:layout_gravity="bottom|center"-->
-        <!--android:layout_marginBottom="6dp"/>-->
 
 </LinearLayout>

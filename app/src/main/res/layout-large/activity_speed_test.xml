@@ -9,6 +9,10 @@
     android:focusableInTouchMode="true"
     android:background="@color/nordicBackground">
 
+    <include
+        android:id="@+id/tool_bar"
+        layout="@layout/tool_bar"/>
+
 
     <TextView
         android:id="@+id/txtSpeedDeviceFw"
@@ -217,20 +221,6 @@
         android:paddingBottom="15dp"
         android:gravity="center"
         tools:text="1000kBps"/>
-
-    <Button
-        android:id="@+id/btnStartTest"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/button_height_layout_large"
-        android:text="@string/btn_start_test"
-        android:onClick="onButtonSpeedTestActivityClick"/>
-
-    <Button
-        android:id="@+id/btnDisconnect"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/button_height_layout_large"
-        android:text="@string/btn_disconnect"
-        android:onClick="onButtonSpeedTestActivityClick"/>
 
 
 

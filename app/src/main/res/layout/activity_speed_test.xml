@@ -9,17 +9,22 @@
     android:focusableInTouchMode="true"
     android:background="@color/nordicBackground">
 
-            <TextView
-                android:id="@+id/txtSpeedDeviceFw"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:text="4654"/>
+    <include
+        android:id="@+id/tool_bar"
+        layout="@layout/tool_bar"/>
 
-            <TextView
-                android:id="@+id/txtSpeedDeviceHw"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:text="nRF52"/>
+
+    <TextView
+        android:id="@+id/txtSpeedDeviceFw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="4654"/>
+
+    <TextView
+        android:id="@+id/txtSpeedDeviceHw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="nRF52"/>
 
 
     <LinearLayout
@@ -215,28 +220,6 @@
         android:textSize="@dimen/txt_size_throughput"
         tools:text="1000kBps" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <Button
-            android:id="@+id/btnStartTest"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/btn_start_test"
-            android:onClick="onButtonSpeedTestActivityClick"/>
-
-        <Button
-            android:id="@+id/btnDisconnect"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/btn_disconnect"
-            android:onClick="onButtonSpeedTestActivityClick"/>
-
-
-
-    </LinearLayout>
 
 
 </LinearLayout>

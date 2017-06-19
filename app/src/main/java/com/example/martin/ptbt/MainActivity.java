@@ -4,24 +4,19 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.ScanRecord;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,17 +40,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ArrayList<ScanFilter> scanFilterList;
     private Handler mScannerHandler;
     private boolean mIsScanning = false;
-    private Button btnScan;
-    private TextView txtScan;
+    private TextView txtToolbarBtnRight, txtToolbarBtnLeft;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
-        toolbar.setTitle("");
-        setSupportActionBar(toolbar);
 
         mScannerHandler = new Handler();
 
@@ -69,13 +59,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void createGui() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
+        toolbar.setTitle("");
+        setSupportActionBar(toolbar);
+
         ListView deviceList = (ListView) findViewById(R.id.listDevices);
         deviceList.setAdapter(deviceAdapter = new DeviceListAdapter());
         deviceList.setOnItemClickListener(this);
 
-        btnScan = (Button) findViewById(R.id.btnScan);
-        txtScan = (TextView) findViewById(R.id.txtScan);
-        txtScan.setText("Scan");
+        txtToolbarBtnRight = (TextView) findViewById(R.id.txtControlButtonRight);
+        txtToolbarBtnRight.setText(getResources().getString(R.string.scan));
+        txtToolbarBtnLeft = (TextView) findViewById(R.id.txtControlButtonLeft);
+        txtToolbarBtnLeft.setText(getResources().getString(R.string.app_name));
     }
 
 
@@ -164,8 +159,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mScanner.startScan(scanFilterList, settings, scanCallback);
         deviceAdapter.clear();
         deviceAdapter.notifyDataSetChanged();
-        btnScan.setText("Stop scan");
-        txtScan.setText("Stop scan");
+        txtToolbarBtnRight.setText(getResources().getString(R.string.stop_scan));
         mIsScanning = true;
     }
 
@@ -174,8 +168,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mScannerHandler.removeCallbacks(mStopScanningTask);
         mIsScanning = false;
         mScanner.stopScan(scanCallback);
-        btnScan.setText("Scan");
-        txtScan.setText("Scan");
+        txtToolbarBtnRight.setText(getResources().getString(R.string.scan));
     }
 
     private Runnable mStopScanningTask = new Runnable() {
@@ -200,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 if (!deviceAdapter.hasDevice(result)) {
                     deviceAdapter.addDevice(result);
                     deviceAdapter.notifyDataSetChanged();
-                    lazyAutoConnect(); // Auto connect to first discovered device
+//                    lazyAutoConnect(); // Auto connect to first discovered device
                 }
             }
         }
@@ -232,27 +225,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         deviceAdapter.notifyDataSetChanged();
     }
 
-    public void onButtonsClick(View view) {
+    public void onToolbarBtnClick(View view) {
         switch (view.getId()) {
-            case R.id.btnScan:
-                if (mIsScanning) {
-                    stopLeScan();
-                } else {
+            case R.id.txtControlButtonRight:
+                if (!mIsScanning) {
+                    txtToolbarBtnRight.setText(getResources().getString(R.string.stop_scan));
                     startLeScan();
+                } else {
+                    txtToolbarBtnRight.setText(getResources().getString(R.string.scan));
+                    stopLeScan();
                 }
                 break;
             default:
                 break;
-        }
-    }
-
-    public void onScanTextClick(View view) {
-        if (!mIsScanning) {
-            txtScan.setText("Stop scan");
-            startLeScan();
-        } else {
-            txtScan.setText("Scan");
-            stopLeScan();
         }
     }
 

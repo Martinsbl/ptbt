@@ -30,8 +30,7 @@ public class SpeedTestActivity extends AppCompatActivity {
     private static final String TAG = "SpeedTestActivity";
     public static final String EXTRA_DEVICE_ADDRESS = "com.example.mabo.myapplication.EXTRA_DEVICE_ADDRESS";
 
-    private TextView txtDeviceFw, txtDeviceHw, txtThroughput;
-    private Switch swCfgDle, swCfgConnEvtExt;
+    private TextView txtDeviceFw, txtDeviceHw, txtThroughput, txtToolbarBtnRight, txtToolbarBtnLeft;
 
     Intent intentGattClientService;
     private GattClientService mGattClientService;
@@ -147,10 +146,11 @@ public class SpeedTestActivity extends AppCompatActivity {
                     testProgressTime += SystemClock.uptimeMillis() - testStartTime;
                     testTimeSinceLastNotification = testProgressTime - lastNotificationTime;
                     receivedBytes += rawBytes.length;
+                    final float intermittent_kbps = 8 * (float) rawBytes.length / (float) testTimeSinceLastNotification;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            String string = String.format(Locale.ENGLISH, "%d Bytes Time: %s", receivedBytes, testProgressTime);
+                            String string = String.format(Locale.ENGLISH, "%d Bytes Time: %s, TP: %.01f kbps", receivedBytes, testProgressTime, intermittent_kbps);
                             txtThroughput.setText(string);
                         }
                     });
@@ -207,30 +207,31 @@ public class SpeedTestActivity extends AppCompatActivity {
     };
 
     private void createGui() {
+        txtToolbarBtnRight = (TextView) findViewById(R.id.txtControlButtonRight);
+        txtToolbarBtnRight.setText(getResources().getString(R.string.start_test));
+        txtToolbarBtnLeft = (TextView) findViewById(R.id.txtControlButtonLeft);
+        txtToolbarBtnLeft.setText(getResources().getString(R.string.disconnect));
+
         txtDeviceFw = (TextView) findViewById(R.id.txtSpeedDeviceFw);
         txtDeviceHw = (TextView) findViewById(R.id.txtSpeedDeviceHw);
         txtThroughput = (TextView) findViewById(R.id.txtThroughput);
-
-        swCfgConnEvtExt = (Switch) findViewById(R.id.swCfgConnLenExt);
-        swCfgDle = (Switch) findViewById(R.id.swCfgDle);
     }
 
-    public void onButtonSpeedTestActivityClick(View view) {
+
+    public void onToolbarBtnClick(View view) {
         switch (view.getId()) {
-            case R.id.btnStartTest:
+            case R.id.txtControlButtonRight:
                 if (!testInProgress) {
                     mGattClientService.startSpeedTest(true);
+                    txtToolbarBtnRight.setText(getResources().getString(R.string.stop_test));
                 } else {
                     // TODO Implement stop test function
                 }
                 break;
-            case R.id.btnDisconnect:
+            case R.id.txtControlButtonLeft:
                 stopGattClientService();
                 finish();
                 break;
-            default:
-                break;
-
         }
     }
 

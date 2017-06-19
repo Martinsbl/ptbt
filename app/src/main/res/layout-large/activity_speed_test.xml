@@ -14,17 +14,34 @@
         layout="@layout/tool_bar"/>
 
 
-    <TextView
-        android:id="@+id/txtSpeedDeviceFw"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:text="4654"/>
 
-    <TextView
-        android:id="@+id/txtSpeedDeviceHw"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:text="nRF52"/>
+        android:background="@color/color_primary_light"
+        android:orientation="vertical"
+        android:paddingLeft="15dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp">
+
+        <TextView
+            android:id="@+id/txtSpeedDeviceHw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:textColor="@color/color_primary_darkest"
+            tools:text="Peripheral Device: nRF52840"/>
+
+        <TextView
+            android:id="@+id/txtSpeedDeviceFw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/color_primary_darkest"
+            tools:text="Firmware: 4654DSD5DF"/>
+
+
+    </LinearLayout>
 
 
     <LinearLayout
@@ -46,10 +63,8 @@
 
                 <TextView
                     android:id="@+id/txtCfgMtu"
-                    android:layout_width="@dimen/cfg_list_txt_with_layout_large"
-                    android:layout_height="wrap_content"
-                    android:text="MTU [bytes]:"
-                    android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
+                    style="@style/TextConfig_large"
+                    android:text="MTU [bytes]:"/>
 
                 <RadioGroup
                     android:layout_width="wrap_content"
@@ -90,10 +105,8 @@
 
                 <TextView
                     android:id="@+id/txtCfgConnInterval"
-                    android:layout_width="@dimen/cfg_list_txt_with_layout_large"
-                    android:layout_height="wrap_content"
-                    android:text="Conn Interval [ms]:"
-                    android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
+                    style="@style/TextConfig_large"
+                    android:text="Conn Interval [ms]:"/>
 
                 <RadioGroup
                     android:layout_width="wrap_content"
@@ -134,10 +147,8 @@
 
                 <TextView
                     android:id="@+id/txtCfgDle"
-                    android:layout_width="@dimen/cfg_list_txt_with_layout_large"
-                    android:layout_height="wrap_content"
-                    android:text="DLE:"
-                    android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
+                    style="@style/TextConfig_large"
+                    android:text="DLE:"/>
 
                 <Switch
                     android:id="@+id/swCfgDle"
@@ -156,10 +167,8 @@
 
                 <TextView
                     android:id="@+id/txtCfgConnLenExt"
-                    android:layout_width="@dimen/cfg_list_txt_with_layout_large"
-                    android:layout_height="wrap_content"
-                    android:text="Conn. Evt. Extension:"
-                    android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
+                    style="@style/TextConfig_large"
+                    android:text="Conn. Evt. Extension:"/>
 
                 <Switch
                     android:id="@+id/swCfgConnLenExt"
@@ -178,10 +187,8 @@
 
                 <TextView
                     android:id="@+id/txtCfgPhy"
-                    android:layout_width="@dimen/cfg_list_txt_with_layout_large"
-                    android:layout_height="wrap_content"
-                    android:text="Phy:"
-                    android:textSize="@dimen/txt_size_cfg_list_layout_large"/>
+                    style="@style/TextConfig_large"
+                    android:text="Phy:"/>
 
                 <RadioGroup
                     android:layout_width="wrap_content"

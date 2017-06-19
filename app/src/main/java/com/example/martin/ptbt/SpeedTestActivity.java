@@ -40,6 +40,7 @@ public class SpeedTestActivity extends AppCompatActivity {
     private boolean testInProgress = false;
     private long testProgressTime;
     private long testStartTime;
+    private long lastNotificationTime;
     private long testTimeSinceLastNotification;
 
     private int receivedBytes = 0;
@@ -130,6 +131,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                     // TODO Start timer
                     testInProgress = true;
                     testStartTime = SystemClock.uptimeMillis();
+                    lastNotificationTime = SystemClock.uptimeMillis();
                     testTimeSinceLastNotification = 0;
                     receivedBytes += rawBytes.length;
                     runOnUiThread(new Runnable() {
@@ -142,9 +144,8 @@ public class SpeedTestActivity extends AppCompatActivity {
                     break;
                 case GattClientService.ACTION_GATT_SPAM_CHAR_NOTIFY:
                     // Test in progress
-                    long lastNotificationTime = testProgressTime;
                     testProgressTime += SystemClock.uptimeMillis() - testStartTime;
-                    testTimeSinceLastNotification = testProgressTime - lastNotificationTime;
+                    testTimeSinceLastNotification = SystemClock.uptimeMillis() - lastNotificationTime;
                     receivedBytes += rawBytes.length;
                     final float intermittent_kbps = 8 * (float) rawBytes.length / (float) testTimeSinceLastNotification;
                     runOnUiThread(new Runnable() {
@@ -154,6 +155,7 @@ public class SpeedTestActivity extends AppCompatActivity {
                             txtThroughput.setText(string);
                         }
                     });
+                    lastNotificationTime = SystemClock.uptimeMillis();
                     break;
                 case GattClientService.ACTION_GATT_SPAM_CHAR_END_TEST:
                     // TODO Stop timer

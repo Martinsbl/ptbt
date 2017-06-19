@@ -13,18 +13,35 @@
         android:id="@+id/tool_bar"
         layout="@layout/tool_bar"/>
 
-
-    <TextView
-        android:id="@+id/txtSpeedDeviceFw"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:text="4654"/>
+        android:background="@color/color_primary_light"
+        android:orientation="vertical"
+        android:paddingLeft="15dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp">
 
-    <TextView
-        android:id="@+id/txtSpeedDeviceHw"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:text="nRF52"/>
+        <TextView
+            android:id="@+id/txtSpeedDeviceHw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:textColor="@color/color_primary_darkest"
+            tools:text="Peripheral Device: nRF52840"/>
+
+        <TextView
+            android:id="@+id/txtSpeedDeviceFw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/color_primary_darkest"
+            tools:text="Firmware: 4654DSD5DF"/>
+
+
+    </LinearLayout>
+
+
 
 
     <LinearLayout
@@ -46,10 +63,8 @@
 
                 <TextView
                     android:id="@+id/txtCfgMtu"
-                    android:layout_width="@dimen/cfg_list_txt_with"
-                    android:layout_height="wrap_content"
-                    android:text="MTU:"
-                    android:textSize="@dimen/txt_size_cfg_list" />
+                    style="@style/TextConfig"
+                    android:text="MTU:" />
 
                 <RadioGroup
                     android:layout_width="wrap_content"
@@ -90,10 +105,8 @@
 
                 <TextView
                     android:id="@+id/txtCfgConnInterval"
-                    android:layout_width="@dimen/cfg_list_txt_with"
-                    android:layout_height="wrap_content"
-                    android:text="Conn Int [ms]:"
-                    android:textSize="@dimen/txt_size_cfg_list" />
+                    style="@style/TextConfig"
+                    android:text="Conn Int [ms]:" />
 
                 <RadioGroup
                     android:layout_width="wrap_content"
@@ -134,10 +147,8 @@
 
                 <TextView
                     android:id="@+id/txtCfgDle"
-                    android:layout_width="@dimen/cfg_list_txt_with"
-                    android:layout_height="wrap_content"
-                    android:text="DLE:"
-                    android:textSize="@dimen/txt_size_cfg_list" />
+                    style="@style/TextConfig"
+                    android:text="DLE:"/>
 
                 <Switch
                     android:id="@+id/swCfgDle"
@@ -155,10 +166,8 @@
 
                 <TextView
                     android:id="@+id/txtCfgConnLenExt"
-                    android:layout_width="@dimen/cfg_list_txt_with"
-                    android:layout_height="wrap_content"
-                    android:text="Event Ext:"
-                    android:textSize="@dimen/txt_size_cfg_list" />
+                    style="@style/TextConfig"
+                    android:text="Event Ext:"/>
 
                 <Switch
                     android:id="@+id/swCfgConnLenExt"
@@ -176,10 +185,8 @@
 
                 <TextView
                     android:id="@+id/txtCfgPhy"
-                    android:layout_width="@dimen/cfg_list_txt_with"
-                    android:layout_height="wrap_content"
-                    android:text="Phy:"
-                    android:textSize="@dimen/txt_size_cfg_list" />
+                    style="@style/TextConfig"
+                    android:text="Phy:"/>
 
                 <RadioGroup
                     android:layout_width="wrap_content"

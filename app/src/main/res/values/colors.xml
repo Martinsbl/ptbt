@@ -17,4 +17,26 @@
     <color name="actionBarMenuTextColor">#FFFFFF</color>
     <color name="actionBarIconColor">#fff</color>
     <color name="darkGray">#AAABAF</color>
+
+
+    <color name="nordic_primary">@color/color_primary</color>
+    <color name="color_primary">#0098DA</color>
+    <color name="color_primary_lightest">#20B9FC</color>
+    <color name="color_primary_light">#06B4FF</color>
+    <color name="color_primary_dark">#006D9B</color>
+    <color name="color_primary_darkest">#00557A</color>
+
+    <color name="color_secondary">#FFAA00</color>
+    <color name="color_secondary_lightest">#FFB116</color>
+    <color name="color_secondary_light">#FFAA00</color>
+    <color name="color_secondary_dark">#F7A400</color>
+    <color name="color_secondary_darkest">#C28100</color>
+
+    <color name="color_tertiary">#FF5300</color>
+    <color name="color_tertiary_lightest">#FF6116</color>
+    <color name="color_tertiary_light">#FF5300</color>
+    <color name="color_tertiary_dark">#F75000</color>
+    <color name="color_tertiary_darkest">#C23F00</color>
+
+
 </resources>

@@ -13,27 +13,17 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <!--<style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />-->
+    <style name="TextConfig">
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:textSize">@dimen/txt_size_cfg_list</item>
+        <item name="android:layout_width">@dimen/cfg_list_txt_with</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
 
-    <!--<style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />-->
-
-
-    <!-- Styles used by the Toolbar -->
-    <!--<style name="ActionBar.TitleText" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">-->
-        <!--<item name="android:textColor">#fff</item>-->
-        <!--<item name="android:textSize">18sp</item>-->
-    <!--</style>-->
-    <!--<style name="ActionBarPopupThemeOverlay" parent="ThemeOverlay.AppCompat.Light" />-->
-    <!--<style name="HeaderBar">-->
-        <!--<item name="android:background">?colorPrimary</item>-->
-    <!--</style>-->
-    <!--&lt;!&ndash; Toolbar &ndash;&gt;-->
-    <!--<style name="ActionBarThemeOverlay" parent="">-->
-        <!--<item name="android:textColorPrimary">#000</item>-->
-        <!--<item name="android:textColorSecondary">#8fff</item>-->
-        <!--<item name="colorControlNormal">@color/actionBarIconColor</item>-->
-        <!--<item name="colorControlHighlight">#3fff</item>-->
-    <!--</style>-->
-
-
+    <style name="TextConfig_large">
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:textSize">@dimen/txt_size_cfg_list_layout_large</item>
+        <item name="android:layout_width">@dimen/cfg_list_txt_with_layout_large</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
 </resources>
